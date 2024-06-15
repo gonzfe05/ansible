@@ -1,0 +1,73 @@
+- name: Setup and configure dotfiles and SSH keys
+  vars:
+    source_key: "./credentials/.ssh/id_rsa"
+    dest_key_private: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+    source_key_pub: "./credentials/.ssh/id_rsa.pub"
+    dest_key_pub: "{{ lookup('env', 'HOME') }}/.ssh/authorized_keys"
+
+  block:
+    - name: Ensure .ssh directory exists
+      ansible.builtin.file:
+        dest: "{{ lookup('env', 'HOME') }}/.ssh"
+        mode: '0700'
+        state: directory
+      tags:
+        - dotfiles
+        - ssh
+
+    - name: Install SSH private key
+      ansible.builtin.copy:
+        src: "{{ source_key }}"
+        dest: "{{ dest_key_private }}"
+        mode: '0600'
+      tags:
+        - dotfiles
+        - ssh
+
+    - name: Install SSH public key
+      ansible.builtin.copy:
+        src: "{{ source_key_pub }}"
+        dest: "{{ dest_key_pub }}"
+        mode: '0600'
+      tags:
+        - dotfiles
+        - ssh
+
+    - name: Verify SSH private key was copied
+      ansible.builtin.stat:
+        path: "{{ dest_key_private }}"
+      register: ssh_private_key_stat
+
+    - name: Check if SSH private key exists
+      ansible.builtin.debug:
+        msg: "SSH private key was copied successfully."
+      when: ssh_private_key_stat.stat.exists
+
+    - name: Fail if SSH private key was not copied
+      ansible.builtin.fail:
+        msg: "SSH private key was not copied!"
+      when: not ssh_private_key_stat.stat.exists
+
+    - name: Verify SSH public key was copied
+      ansible.builtin.stat:
+        path: "{{ dest_key_pub }}"
+      register: ssh_public_key_stat
+
+    - name: Check if SSH public key exists
+      ansible.builtin.debug:
+        msg: "SSH public key was copied successfully."
+      when: ssh_public_key_stat.stat.exists
+
+    - name: Fail if SSH public key was not copied
+      ansible.builtin.fail:
+        msg: "SSH public key was not copied!"
+      when: not ssh_public_key_stat.stat.exists
+
+    - name: Add SSH public key to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user_id }}"
+        state: present
+        key: "{{ lookup('file', source_key_pub) }}"
+      tags:
+        - dotfiles
+        - ssh

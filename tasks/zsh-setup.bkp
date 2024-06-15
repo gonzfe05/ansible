@@ -1,0 +1,50 @@
+- name: Install and configure Zsh
+  tags: &tags_for_zsh_tasks ['install','productivity','dotfiles','zsh']
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Install Zsh
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.package:
+        name: zsh
+        state: present
+      become: true
+      become_user: root
+    - name: Change default shell to Zsh
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.command:
+        cmd: chsh -s /bin/zsh {{ ansible_user_id }}
+      become: true
+      become_user: root
+    - name: Verify shell change
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.command:
+        argv:
+          - sh
+          - -c
+          - "getent passwd {{ ansible_user_id }} | cut -d: -f7"
+      register: shell_output
+    - name: Assert Zsh is the default shell
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.assert:
+        that:
+          - shell_output.stdout.strip() == '/bin/zsh'
+        msg: "The shell change to Zsh failed"
+    - name: Check that the somefile.conf exists
+      tags: *tags_for_zsh_tasks
+      stat:
+        path: /home/aleph/.oh-my-zsh
+      register: oh_my_stats
+    - name: Oh-My-Zsh
+      tags: *tags_for_zsh_tasks
+      when: oh_my_stats.stat.exists == False
+      shell: |
+        curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh > ~/.oh-my-installer && \
+        chmod +x ~/.oh-my-installer && \
+        ~/.oh-my-installer
+      become_user: aleph
+    - name: Install zsh-autosuggestions
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: "~/.oh-my-zsh/plugins/zsh-autosuggestions"
+  

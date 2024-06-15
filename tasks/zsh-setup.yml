@@ -1,0 +1,89 @@
+- name: Install and configure Zsh
+  tags: &tags_for_zsh_tasks ['install', 'productivity', 'dotfiles', 'zsh']
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Install Zsh
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.package:
+        name: zsh
+        state: present
+      become: true
+      become_user: root
+
+    - name: Get current shell
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.command:
+        argv:
+          - sh
+          - -c
+          - "getent passwd {{ ansible_user_id }} | cut -d: -f7"
+      register: current_shell
+      changed_when: false
+
+    - name: Change default shell to Zsh
+      tags: *tags_for_zsh_tasks
+      when: current_shell.stdout.strip() != '/bin/zsh'
+      ansible.builtin.command:
+        cmd: chsh -s /bin/zsh {{ ansible_user_id }}
+      register: change_shell
+      changed_when: change_shell.rc == 0
+      become: true
+      become_user: root
+
+    - name: Verify shell change
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.command:
+        argv:
+          - sh
+          - -c
+          - "getent passwd {{ ansible_user_id }} | cut -d: -f7"
+      register: shell_output
+      changed_when: false
+
+    - name: Assert Zsh is the default shell
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.assert:
+        that:
+          - shell_output.stdout.strip() == '/bin/zsh'
+        msg: "The shell change to Zsh failed"
+
+    - name: Check that the .oh-my-zsh directory exists
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+      register: oh_my_stats
+
+    - name: Install Oh-My-Zsh
+      tags: *tags_for_zsh_tasks
+      when: not oh_my_stats.stat.exists
+      block:
+        - name: Download Oh-My-Zsh installer script
+          ansible.builtin.get_url:
+            url: https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh
+            dest: "{{ lookup('env', 'HOME') }}/.oh-my-installer"
+            mode: '0755'
+          become: true
+          become_user: "{{ ansible_user_id }}"
+
+        - name: Run Oh-My-Zsh installer script
+          ansible.builtin.command: "{{ lookup('env', 'HOME') }}/.oh-my-installer"
+          become: true
+          become_user: "{{ ansible_user_id }}"
+          register: oh_my_zsh_install
+          changed_when: oh_my_zsh_install.rc == 0
+
+    - name: Check if zsh-autosuggestions is installed
+      tags: *tags_for_zsh_tasks
+      ansible.builtin.stat:
+        path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+      register: zsh_autosuggestions_stats
+
+    - name: Install zsh-autosuggestions
+      tags: *tags_for_zsh_tasks
+      when: not zsh_autosuggestions_stats.stat.exists
+      ansible.builtin.git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+        version: master
+      become: true
+      become_user: "{{ ansible_user_id }}"
