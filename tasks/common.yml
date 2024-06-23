@@ -1,0 +1,20 @@
+- name: All the libraries i want
+  tags:
+    - install
+    - core
+  become: true
+  apt:
+    name: fzf
+    state: present
+  vars:
+    packages:
+    - fzf
+    - ripgrep
+    - pavucontrol
+    - xclip
+    - jq
+    - tldr
+    - shutter
+  loop_control:
+    loop_var: package
+  with_items: "{{ packages }}"

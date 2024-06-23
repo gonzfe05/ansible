@@ -1,7 +1,5 @@
 - name: Setup and configure dotfiles and SSH keys
   hosts: localhost
-  vars:
-    personal: "{{ lookup('env', 'HOME') }}/personal"
   pre_tasks:
     - name: Update Apt
       become: true
@@ -13,19 +11,47 @@
         - install
         - core
   tasks:
-    - name: Include Zsh setup tasks
+    - name: Include Zsh
       ansible.builtin.include_tasks: tasks/zsh-setup.yml
-    - name: Include ssh setup tasks
+      tags: zsh
+    - name: Include ssh
       ansible.builtin.include_tasks: tasks/ssh-setup.yml
-#    - include: tasks/git-setup.yml
-#    - include: tasks/core-setup.yml
-#    - include: tasks/node-setup.yml
-#    - include: tasks/npm-packages.yml
-#    - include: tasks/slack-setup.yml
-#    - include: tasks/personal-projects.yml
-#    - include: tasks/nvim-setup.yml
-#    - include: tasks/brave.yml
-#    - include: tasks/debugger.yml
-#    - include: tasks/dotfiles.yml
-#    - include: tasks/productivity-tools.yml
-#    - include: tasks/lsp.yml
+      tags:
+        - ssh
+        - dotfiles
+    - name: Include libraries i want
+      ansible.builtin.include_tasks: tasks/common.yml
+      tags: common-libs
+    - name: Include core libraries
+      ansible.builtin.include_tasks: tasks/core.yml
+      tags:
+        - core-libs
+        - dotfiles
+    - name: Include git
+      ansible.builtin.include_tasks: tasks/git-setup.yml
+      tags:
+        - git
+        - dotfiles
+    - name: Include tmux
+      ansible.builtin.include_tasks: tasks/tmux-setup.yml
+      tags: tmux
+    - name: Include dotfiles
+      ansible.builtin.include_tasks: tasks/dotfiles-setup.yml
+      tags: dotfiles
+
+- name: Zsh
+  hosts: localhost
+  pre_tasks:
+    - name: Update Apt
+      become: true
+      ansible.builtin.apt:
+        force_apt_get: true
+        update_cache: true
+        state: present
+      tags:
+        - install
+        - core
+  tasks:
+    - name: Include Zsh
+      ansible.builtin.include_tasks: tasks/zsh-setup.yml
+      tags: zsh

@@ -8,4 +8,4 @@ echo "Current directory: $(pwd)"
 
 # Run the Docker container with volume mounting
 echo "Running Docker container..."
-docker run -it -v "$(pwd)":/app $PROJECT_NAME zsh
+docker run -it -v "$(pwd)":/app $PROJECT_NAME bash

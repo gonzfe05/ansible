@@ -1,0 +1,16 @@
+- name: Install system packages
+  block:
+    - name: Install system build packages
+      tags:
+        - install
+        - core
+      become: true
+      apt:
+        name: ["build-essential", "cmake", "pkg-config"]
+    - name: Install system utils packages
+      tags:
+        - install
+        - core
+      become: true
+      apt:
+        name: [ "curl", "htop", "lsof", "fzf" ]

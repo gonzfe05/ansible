@@ -1,0 +1,16 @@
+- name: Setup and configure dotfiles and SSH keys
+  tags:
+    - install
+    - core
+    - tmux
+  block:
+    - name: Include main vars
+      ansible.builtin.include_vars:
+        file: vars.json
+
+    - name: installing tmux
+      become: true
+      apt:
+        name: tmux
+        state: present
+        update_cache: yes

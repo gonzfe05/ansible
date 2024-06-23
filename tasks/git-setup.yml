@@ -1,0 +1,32 @@
+- name: Setup and configure dotfiles and SSH keys
+  tags:
+    - install
+    - core
+    - git
+  block:
+    - name: Include main vars
+      ansible.builtin.include_vars:
+        file: vars.json
+
+    - name: "Install git"
+      become: true
+      apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - git
+
+    - name: Set user.name for git config
+      become_user: "{{ username }}"
+      community.general.git_config:
+        name: user.name
+        scope: global
+        value: "{{ username }}"
+      
+    - name: Set user.email for git config
+      become_user: "{{ username }}"
+      community.general.git_config:
+        name: user.email
+        scope: global
+        value: "{{ email }}"
