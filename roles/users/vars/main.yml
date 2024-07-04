@@ -1,0 +1,13 @@
+---
+users:
+  - name: aleph
+    uid: 1001
+    shell: /bin/bash
+    comment: "Aleph User"
+    groups: "admin,sudo"
+    password: ""
+
+required_groups:
+  - admin
+  - users
+  - sudo

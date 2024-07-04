@@ -1,0 +1,46 @@
+---
+- name: Verify tasks related to shell configuration and Oh-My-Zsh installation
+  hosts: instance
+  become: true
+  become_user: aleph
+  tasks:
+    - name: Verify current shell is Zsh
+      command: 
+        argv: 
+          - sh
+          - -c
+          - "getent passwd {{ ansible_user_id }} | cut -d: -f7"
+      register: current_shell_check
+      changed_when: false
+    
+    - name: Print current shell result
+      debug:
+        var: current_shell_check
+
+    - name: Assert Zsh is the default shell
+      ansible.builtin.assert:
+        that:
+          - current_shell_check.stdout.strip() == '/bin/zsh'
+        msg: "The shell change to Zsh failed"
+
+    - name: Verify .oh-my-zsh directory exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      register: oh_my_zsh_check
+
+    - name: Assert .oh-my-zsh directory exists
+      ansible.builtin.assert:
+        that:
+          - oh_my_zsh_check.stat.exists
+        msg: ".oh-my-zsh directory is missing"
+
+    - name: Verify zsh-autosuggestions plugin directory exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+      register: zsh_autosuggestions_check
+
+    - name: Assert zsh-autosuggestions plugin is installed
+      ansible.builtin.assert:
+        that:
+          - zsh_autosuggestions_check.stat.exists
+        msg: "zsh-autosuggestions plugin is missing"

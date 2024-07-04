@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: instance
+  vars:
+    apt_installs_custom:
+      - vim
+      - curl
+      - git
+  roles:
+    - role: apt_installs

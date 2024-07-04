@@ -1,0 +1,61 @@
+---
+- name: Verify install_dotfiles role
+  hosts: instance
+  become: true
+  become_user: aleph
+  tasks:
+    - name: Check if stow is installed
+      command: stow --version
+      register: stow_version
+      failed_when: stow_version.rc != 0
+
+    - name: Check if .dotfiles repository is cloned
+      stat:
+        path: "{{ ansible_env.HOME }}/.dotfiles"
+      register: dotfiles_repo
+      failed_when: not dotfiles_repo.stat.exists
+
+    - name: Check if .zshrc exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+      register: zshrc_file
+
+    - name: Check if .zshrc file exists
+      fail:
+        msg: ".zshrc file is missing"
+      when: not zshrc_file.stat.exists
+
+    - name: Check if zshrc is the one in dotfiles
+      command: grep -Fxq "source ~/.zsh_profile" "{{ ansible_env.HOME }}/.zshrc"
+      register: result
+      ignore_errors: yes
+
+    - name: Fail if zshrc is not the one from dotfiles
+      fail:
+        msg: "The line 'source ~/.zsh_profile' was not found in zshrc."
+      when: result.rc != 0
+
+    - name: Check if .zsh_profile exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.zsh_profile"
+      register: zsh_profile_file
+
+    - name: Check if .zsh_profile file exists
+      fail:
+        msg: ".zsh_profile file is missing"
+      when: not zsh_profile_file.stat.exists
+
+    - name: Check if bin files are executable
+      find:
+        paths: "{{ ansible_env.HOME }}/bin"
+        recurse: true
+        file_type: file
+      register: bin_files
+
+    - name: Ensure all files in bin are executable
+      file:
+        path: "{{ item.path }}"
+        mode: '0755'
+        state: file
+      loop: "{{ bin_files.files }}"
+      failed_when: item.mode != '0755'

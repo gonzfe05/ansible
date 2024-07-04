@@ -1,0 +1,16 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: "{{ apt_update_cache }}"
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+
+- name: Upgrade all apt packages
+  ansible.builtin.apt:
+    upgrade: "{{ apt_upgrade }}"
+  when: apt_upgrade is defined and apt_upgrade
+
+- name: Install custom packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ apt_installs_custom }}"

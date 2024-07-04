@@ -1,0 +1,59 @@
+---
+- name: Verify
+  hosts: instance
+  tasks:
+    - name: Check if aleph user exists
+      ansible.builtin.command: id aleph
+      register: aleph_user
+      ignore_errors: yes
+
+    - name: Assert aleph user exists
+      ansible.builtin.assert:
+        that:
+          - aleph_user.rc == 0
+
+    - name: Check if aleph's shell is /bin/bash
+      ansible.builtin.command: getent passwd aleph
+      register: aleph_passwd
+      changed_when: false
+
+    - name: Assert aleph's shell
+      ansible.builtin.assert:
+        that:
+          - "'/bin/bash' in aleph_passwd.stdout"
+    - name: Check aleph's groups
+      ansible.builtin.command: id -Gn aleph
+      register: aleph_groups
+      changed_when: false
+
+    - name: Assert aleph's groups
+      ansible.builtin.assert:
+        that:
+          - "'admin' in aleph_groups.stdout.split()"
+          - "'sudo' in aleph_groups.stdout.split()"
+    
+    - name: Check Aleph's sudo access
+      ansible.builtin.command: sudo -lU aleph
+      register: aleph_sudo
+      ignore_errors: yes
+
+    - name: Assert Aleph has sudo access
+      ansible.builtin.assert:
+        that:
+          - aleph_sudo.rc == 0
+          - "'not allowed to run sudo' not in aleph_sudo.stdout"
+
+    - name: Debug Aleph's sudo access
+      ansible.builtin.debug:
+        var: aleph_sudo.stdout
+
+    - name: Verify Aleph can update apt cache
+      ansible.builtin.command: sudo -u aleph sudo apt-get update
+      register: aleph_apt_update
+      ignore_errors: yes
+
+    - name: Assert Aleph can run apt update
+      ansible.builtin.assert:
+        that:
+          - aleph_apt_update.rc == 0
+    

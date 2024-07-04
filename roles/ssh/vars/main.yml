@@ -1,0 +1,5 @@
+---
+source_key: "id_rsa"
+source_key_pub: "id_rsa.pub"
+dest_key_private: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+dest_key_pub: "{{ ansible_env.HOME }}/.ssh/authorized_keys"

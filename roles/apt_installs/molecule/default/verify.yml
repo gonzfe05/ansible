@@ -1,0 +1,39 @@
+---
+- name: Verify
+  hosts: instance
+  tasks:
+    - name: Ensure vim is installed
+      ansible.builtin.command:
+        cmd: vim --version
+      register: vim_result
+      ignore_errors: yes
+
+    - name: Assert vim installation
+      ansible.builtin.assert:
+        that:
+          - vim_result.rc == 0
+        fail_msg: "Vim is not installed"
+
+    - name: Ensure curl is installed
+      ansible.builtin.command:
+        cmd: curl --version
+      register: curl_result
+      ignore_errors: yes
+
+    - name: Assert curl installation
+      ansible.builtin.assert:
+        that:
+          - curl_result.rc == 0
+        fail_msg: "Curl is not installed"
+
+    - name: Ensure git is installed
+      ansible.builtin.command:
+        cmd: git --version
+      register: git_result
+      ignore_errors: yes
+
+    - name: Assert git installation
+      ansible.builtin.assert:
+        that:
+          - git_result.rc == 0
+        fail_msg: "Git is not installed"
