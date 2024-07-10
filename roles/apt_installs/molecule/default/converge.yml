@@ -6,5 +6,6 @@
       - vim
       - curl
       - git
+      - unzip
   roles:
     - role: apt_installs

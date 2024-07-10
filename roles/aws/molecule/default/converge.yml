@@ -1,21 +1,13 @@
 ---
-- name: Test
-  hosts: localhost
+- name: Converge
+  hosts: instance
   become: yes
-  become_user: aleph
+  become_user: root
   roles:
     - role: apt_installs
       vars:
         apt_installs_custom:
-          - openssh-client
-          - git
-          - zsh
-          - tmux
-          - stow
-          - fzf
-          - zip
-      become: yes
-      become_user: root
+          - unzip
     - role: users
       vars:
         users:
@@ -25,9 +17,7 @@
             comment: "Aleph User"
             groups: "admin,sudo"
             password: ""
-      become: yes
-      become_user: root
-    - role: ssh
-    - role: env_setup
-    - role: dotfiles
     - role: aws
+      become: yes
+      become_user: aleph
+      become_password: ""
