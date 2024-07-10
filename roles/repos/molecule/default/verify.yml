@@ -1,0 +1,23 @@
+---
+- name: Verify install_dotfiles role
+  hosts: instance
+  become: true
+  become_user: aleph
+  vars:
+    personal_folder: personal
+  tasks:
+    - name: Check if .dotfiles repository is cloned
+      stat:
+        path: "{{ ansible_env.HOME }}/{{ personal_folder }}/.dotfiles"
+      register: dotfiles_repo
+      failed_when: not dotfiles_repo.stat.exists
+    - name: Check if ansible repository is cloned
+      stat:
+        path: "{{ ansible_env.HOME }}/{{ personal_folder }}/ansible"
+      register: ansible_repo
+      failed_when: not ansible_repo.stat.exists
+    - name: Check if aleph repository is cloned
+      stat:
+        path: "{{ ansible_env.HOME }}/{{ personal_folder }}/aleph"
+      register: aleph_repo
+      failed_when: not aleph_repo.stat.exists
