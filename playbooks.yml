@@ -14,6 +14,7 @@
           - stow
           - fzf
           - zip
+          - vim
       become: yes
       become_user: root
     - role: users
@@ -31,3 +32,4 @@
     - role: env_setup
     - role: dotfiles
     - role: aws
+    - role: repos
