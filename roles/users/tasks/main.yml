@@ -18,6 +18,12 @@
   become: true
   become_user: root
 
+- name: Ensure /etc/sudoers.d directory exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: '0750'
+
 - name: Ensure users in sudo group have passwordless sudo access for apt
   ansible.builtin.template:
     src: sudoers.j2

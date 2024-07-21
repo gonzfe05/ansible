@@ -1,8 +1,6 @@
 ---
 - name: Test
   hosts: localhost
-  become: yes
-  become_user: aleph
   roles:
     - role: apt_installs
       vars:
@@ -15,6 +13,7 @@
           - fzf
           - zip
           - vim
+          - sudo
       become: yes
       become_user: root
     - role: users
@@ -29,7 +28,18 @@
       become: yes
       become_user: root
     - role: ssh
+      become: yes
+      become_user: aleph
     - role: env_setup
+      become: yes
+      become_user: aleph
     - role: dotfiles
+      become: yes
+      become_user: aleph
     - role: aws
+      become: yes
+      become_user: aleph
     - role: repos
+      become: yes
+      become_user: aleph
+ 
