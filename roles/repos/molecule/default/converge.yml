@@ -22,5 +22,8 @@
       become_user: aleph
       become_password: ""
     - role: repos
+      vars:
+        personal_folder: /home/aleph/personal
+        work_folder: /home/aleph/work
       become: yes
       become_user: aleph

@@ -2,7 +2,7 @@
 - name: Cloning .dotfiles
   ansible.builtin.git:
     repo: 'git@github.com:gonzfe05/.dotfiles.git'
-    dest: "{{ ansible_env.HOME }}/{{ personal_folder }}/.dotfiles"
+    dest: "{{ personal_folder }}/.dotfiles"
     recursive: true
     update: true
     accept_hostkey: true
@@ -12,7 +12,7 @@
 - name: Cloning ansible
   ansible.builtin.git:
     repo: 'git@github.com:gonzfe05/ansible.git'
-    dest: "{{ ansible_env.HOME }}/{{ personal_folder }}/ansible"
+    dest: "{{ personal_folder }}/ansible"
     recursive: true
     update: true
     accept_hostkey: true
@@ -22,7 +22,7 @@
 - name: Cloning aleph
   ansible.builtin.git:
     repo: 'git@github.com:gonzfe05/aleph.git'
-    dest: "{{ ansible_env.HOME }}/{{ personal_folder }}/aleph"
+    dest: "{{ personal_folder }}/aleph"
     recursive: true
     update: true
     accept_hostkey: true

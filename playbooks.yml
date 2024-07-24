@@ -13,6 +13,8 @@
           - fzf
           - zip
           - vim
+          - xclip
+          - vim-gtk
           - sudo
       become: yes
       become_user: root
