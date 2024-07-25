@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-sudo apt install software-properties-common
-sudo apt-add-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
-pip3 install ansible-dev-tools
+apt install software-properties-common
+apt-add-repository --yes --update ppa:ansible/ansible
+apt install ansible
+#pip3 install ansible-dev-tools

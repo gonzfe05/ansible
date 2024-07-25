@@ -1,0 +1,75 @@
+---
+- name: Verify
+  hosts: instance
+  become: true
+  become_user: aleph
+  tasks:
+    - name: Check if ssh command exists
+      ansible.builtin.command:
+        cmd: "ssh -V"
+      register: ssh_command_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Assert ssh command exists
+      ansible.builtin.assert:
+        that:
+          - ssh_command_check.rc == 0
+        fail_msg: "SSH command not found. Ensure the SSH client is installed."
+
+    - name: Check if .ssh directory exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh"
+      register: ssh_dir
+
+    - name: Assert .ssh directory exists
+      ansible.builtin.assert:
+        that:
+          - ssh_dir.stat.exists
+
+    - name: Check if SSH private key exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+      register: ssh_private_key
+
+    - name: Assert SSH private key exists
+      ansible.builtin.assert:
+        that:
+          - ssh_private_key.stat.exists
+
+    - name: Check if SSH public key exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+      register: ssh_public_key
+
+    - name: Assert SSH public key exists
+      ansible.builtin.assert:
+        that:
+          - ssh_public_key.stat.exists
+
+    - name: Debug content of SSH public key
+      ansible.builtin.shell: cat "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+      register: public_key_content
+      no_log: false
+
+    - name: Show public key content
+      ansible.builtin.debug:
+        var: public_key_content.stdout
+
+    - name: Test SSH connection to GitHub
+      # This WILL fail, github has no shell access
+      ansible.builtin.command:
+        cmd: "ssh -T git@github.com"
+      register: ssh_test_output
+      ignore_errors: yes
+    
+    - name: Debug SSH output
+      debug:
+        var: ssh_test_output
+
+    - name: Assert SSH connection to GitHub was successful
+      ansible.builtin.assert:
+        that:
+          - "'successfully authenticated' in ssh_test_output.stderr"
+        fail_msg: "SSH connection to GitHub failed. Ensure the SSH key is added to your GitHub account and try again."
+        success_msg: "SSH connection to GitHub was successful."

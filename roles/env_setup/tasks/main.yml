@@ -1,0 +1,75 @@
+---
+- name: Get current user
+  ansible.builtin.command: whoami
+  register: current_user
+  changed_when: false
+  
+- name: Get current shell
+  ansible.builtin.command:
+    argv:
+      - sh
+      - -c
+      - "getent passwd {{ current_user.stdout }} | cut -d: -f7"
+  register: current_shell
+  changed_when: false
+
+- name: Debug ansible_user variable
+  debug:
+    msg: "The value of current_user.stdout is: {{ current_user.stdout }}"
+
+- name: Change default shell to Zsh
+  when: current_shell.stdout.strip() != '/bin/zsh'
+  ansible.builtin.command:
+    cmd: chsh -s /bin/zsh {{ current_user.stdout }}
+  register: change_shell
+  changed_when: change_shell.rc == 0
+
+- name: Verify shell change
+  ansible.builtin.command:
+    argv:
+      - sh
+      - -c
+      - "getent passwd {{ current_user.stdout }} | cut -d: -f7"
+  register: shell_output
+  changed_when: false
+
+- name: Assert Zsh is the default shell
+  ansible.builtin.assert:
+    that:
+      - shell_output.stdout.strip() == '/bin/zsh'
+    msg: "The shell change to Zsh failed"
+
+- name: Debug ansible_env.HOME variable
+  debug:
+    msg: "The value of ansible_env.HOME is: {{ ansible_env.HOME }}"
+
+- name: Check that the .oh-my-zsh directory exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  register: oh_my_stats
+
+- name: Install Oh-My-Zsh
+  when: not oh_my_stats.stat.exists
+  block:
+    - name: Download Oh-My-Zsh installer script
+      ansible.builtin.get_url:
+        url: https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh
+        dest: "{{ ansible_env.HOME }}/.oh-my-installer"
+        mode: '0755'
+
+    - name: Run Oh-My-Zsh installer script
+      ansible.builtin.command: "{{ ansible_env.HOME }}/.oh-my-installer"
+      register: oh_my_zsh_install
+      changed_when: oh_my_zsh_install.rc == 0
+
+- name: Check if zsh-autosuggestions is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+  register: zsh_autosuggestions_stats
+
+- name: Install zsh-autosuggestions
+  when: not zsh_autosuggestions_stats.stat.exists
+  ansible.builtin.git:
+    repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
+    version: master

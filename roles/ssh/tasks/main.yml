@@ -1,0 +1,109 @@
+---
+- name: Gather facts about the user
+  ansible.builtin.setup:
+    filter: ansible_env
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    dest: "{{ ansible_env.HOME }}/.ssh"
+    mode: '0700'
+    state: directory
+
+- name: .ssh directory to use
+  debug:
+    msg: "{{ ansible_env.HOME }}/.ssh"
+
+- name: Install SSH private key
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ source_key }}"
+    dest: "{{ dest_key_private }}"
+    mode: '0600'
+    decrypt: yes
+
+- name: Install SSH public key
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ source_key_pub }}"
+    dest: "{{ dest_key_pub }}"
+    mode: '0600'
+    decrypt: yes
+
+- name: Verify SSH private key was copied
+  ansible.builtin.stat:
+    path: "{{ dest_key_private }}"
+  register: ssh_private_key_stat
+
+- name: Check if SSH private key exists
+  ansible.builtin.debug:
+    msg: "SSH private key was copied successfully to {{ dest_key_private }}"
+  when: ssh_private_key_stat.stat.exists
+
+- name: Fail if SSH private key was not copied
+  ansible.builtin.fail:
+    msg: "SSH private key was not copied!"
+  when: not ssh_private_key_stat.stat.exists
+
+- name: Verify SSH public key was copied
+  ansible.builtin.stat:
+    path: "{{ dest_key_pub }}"
+  register: ssh_public_key_stat
+
+- name: Check if SSH public key exists
+  ansible.builtin.debug:
+    msg: "SSH public key was copied successfully to {{ dest_key_pub }}"
+  when: ssh_public_key_stat.stat.exists
+
+- name: Fail if SSH public key was not copied
+  ansible.builtin.fail:
+    msg: "SSH public key was not copied!"
+  when: not ssh_public_key_stat.stat.exists
+
+- name: Add SSH public key to authorized_keys
+  ansible.posix.authorized_key:
+    user: "{{ ansible_env.USER }}"
+    state: present
+    key: "{{ lookup('file', '{{ role_path }}/files/{{ source_key_pub }}') }}"
+
+- name: Start SSH agent
+  ansible.builtin.shell: "ssh-agent -s"
+  register: ssh_agent_output
+
+- name: Extract SSH_AUTH_SOCK
+  set_fact:
+    ssh_auth_sock: "{{ ssh_agent_output.stdout | regex_search('SSH_AUTH_SOCK=([^;]+);', '\\1') | first }}"
+
+- name: Debug SSH_AUTH_SOCK
+  ansible.builtin.debug:
+    var: ssh_auth_sock
+
+- name: Add SSH key to the agent
+  ansible.builtin.shell: "ssh-add {{ dest_key_private }}"
+  environment:
+    SSH_AUTH_SOCK: "{{ ssh_auth_sock }}"
+  register: ssh_add_output
+  ignore_errors: true
+
+- name: Check if SSH key is added
+  ansible.builtin.shell: "ssh-add -L"
+  environment:
+    SSH_AUTH_SOCK: "{{ ssh_auth_sock }}"
+  register: ssh_keys_list
+  ignore_errors: true
+
+- name: Debug SSH keys added
+  ansible.builtin.debug:
+    var: ssh_keys_list.stdout_lines
+
+- name: Read the public key and print its fingerprint
+  command: ssh-keygen -lf "{{ dest_key_pub }}"
+  register: fingerprint
+
+- name: Display the fingerprint
+  debug:
+    msg: "{{ fingerprint.stdout }}"
+
+- name: Ensure github.com is in the known hosts file
+  ansible.builtin.known_hosts:
+    name: github.com
+    key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
+    path: ~/.ssh/known_hosts
+  become: true

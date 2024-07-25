@@ -1,0 +1,30 @@
+---
+- name: Cloning .dotfiles
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/.dotfiles.git'
+    dest: "{{ personal_folder }}/.dotfiles"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Cloning ansible
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/ansible.git'
+    dest: "{{ personal_folder }}/ansible"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Cloning aleph
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/aleph.git'
+    dest: "{{ personal_folder }}/aleph"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main

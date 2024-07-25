@@ -1,0 +1,55 @@
+---
+- name: Verify
+  hosts: instance
+  become: true
+  become_user: aleph
+  tasks:
+      - name: Check if AWS CLI is installed
+        command: aws --version
+        register: awscli_check
+        ignore_errors: yes
+
+      - name: Fail if AWS CLI is not installed
+        fail:
+          msg: "AWS CLI is not installed."
+        when: awscli_check.rc != 0
+
+      - name: Debug AWS CLI version
+        debug:
+          msg: "AWS CLI version: {{ awscli_check.stdout }}"
+        when: awscli_check.rc == 0
+
+      - name: Check if AWS credentials directory exists
+        stat:
+          path: ~/.aws
+        register: aws_credentials_dir
+
+      - name: Fail if AWS credentials directory does not exist
+        fail:
+          msg: "AWS credentials directory does not exist."
+        when: not aws_credentials_dir.stat.exists
+
+      - name: Check if AWS credentials file exists
+        stat:
+          path: ~/.aws/credentials
+        register: aws_credentials_file
+
+      - name: Fail if AWS credentials file does not exist
+        fail:
+          msg: "AWS credentials file does not exist."
+        when: not aws_credentials_file.stat.exists
+
+      - name: Verify AWS CLI configuration with credentials
+        command: aws sts get-caller-identity
+        register: awscli_identity_check
+        ignore_errors: yes
+
+      - name: Fail if AWS CLI cannot access credentials
+        fail:
+          msg: "AWS CLI cannot access credentials. Ensure the credentials are valid."
+        when: awscli_identity_check.rc != 0
+
+      - name: Debug AWS CLI identity check
+        debug:
+          msg: "AWS CLI identity check: {{ awscli_identity_check.stdout }}"
+        when: awscli_identity_check.rc == 0

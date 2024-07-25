@@ -1,0 +1,75 @@
+---
+- name: Ensure stow is installed
+  ansible.builtin.command:
+    cmd: "which stow"
+  register: stow_check
+  ignore_errors: true
+
+- name: Assert stow is installed
+  ansible.builtin.assert:
+    that:
+      - stow_check.rc == 0
+    fail_msg: "stow is not installed. Please install stow before running this playbook."
+    success_msg: "stow is installed."
+
+- name: Cloning .dotfiles
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/.dotfiles.git'
+    dest: "{{ ansible_env.HOME }}/.dotfiles"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Ensure ubuntu.sh is executable
+  file:
+    path: "{{ ansible_env.HOME }}/.dotfiles/ubuntu.sh"
+    mode: '0755'
+    state: file
+
+- name: Ensure install.sh is executable
+  file:
+    path: "{{ ansible_env.HOME }}/.dotfiles/install.sh"
+    mode: '0755'
+    state: file
+
+- name: Check if .zshrc file exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+  register: zshrc_file
+
+- name: Move .zshrc to .zshrc.backup
+  command: "mv {{ ansible_env.HOME }}/.zshrc {{ ansible_env.HOME }}/.zshrc.backup"
+  when: zshrc_file.stat.exists
+
+- name: Check if .zsh_profile file exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.zsh_profile"
+  register: zsh_profile_file
+
+- name: Move .zsh_profile to .zsh_profile.backup
+  command: "mv {{ ansible_env.HOME }}/.zsh_profile {{ ansible_env.HOME }}/.zsh_profile.backup"
+  when: zsh_profile_file.stat.exists
+
+- name: Stow dotfiles
+  shell: cd {{ ansible_env.HOME }}/.dotfiles && ./ubuntu.sh
+
+- name: Set execute permissions on all files in {{ ansible_env.HOME }}/bin
+  find:
+    paths: "{{ ansible_env.HOME }}/bin"
+    recurse: true
+    file_type: file
+  register: bin_files
+
+- name: Ensure all files in {{ ansible_env.HOME }}/bin are executable
+  file:
+    path: "{{ item.path }}"
+    mode: '0755'
+  loop: "{{ bin_files.files }}"
+
+- name: Add DISPLAY env variable to ~/.zshrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: "export DISPLAY={{ ansible_env.DISPLAY }}"
+    create: yes

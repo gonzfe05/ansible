@@ -1,0 +1,5 @@
+---
+# Role-specific variables
+apt_update_cache: yes
+apt_upgrade: yes
+apt_cache_valid_time: 0

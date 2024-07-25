@@ -1,0 +1,36 @@
+---
+- name: Ensure required groups exist
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ required_groups }}"
+  become: true
+
+- name: Create users from list
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    shell: "{{ item.shell }}"
+    comment: "{{ item.comment }}"
+    groups: "{{ item.groups }}"
+    password: "{{ item.password }}"
+  loop: "{{ users }}"
+  become: true
+  become_user: root
+
+- name: Ensure /etc/sudoers.d directory exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: '0750'
+
+- name: Ensure users in sudo group have passwordless sudo access for apt
+  ansible.builtin.template:
+    src: sudoers.j2
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0440'
+  loop: "{{ users }}"
+  when: "'sudo' in item.groups"
+  become: true
