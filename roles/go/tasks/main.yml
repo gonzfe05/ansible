@@ -1,0 +1,28 @@
+---
+- name: Download Go tarball
+  get_url:
+    url: "https://go.dev/dl/go1.22.5.linux-amd64.tar.gz"
+    dest: "/tmp/go1.22.5.linux-amd64.tar.gz"
+    mode: '0755'
+
+- name: Remove any previous Go installation
+  command: rm -rf /usr/local/go
+  args:
+    warn: false
+
+- name: Extract Go tarball
+  unarchive:
+    src: "/tmp/go1.22.5.linux-amd64.tar.gz"
+    dest: "/usr/local"
+    remote_src: yes
+
+- name: Set Go PATH environment variables
+  copy:
+    dest: /etc/profile.d/go.sh
+    content: |
+      export PATH=$PATH:/usr/local/go/bin
+      export GOROOT=/usr/local/go
+      export GOPATH=$HOME/go
+      export PATH=$PATH:$GOPATH/bin
+    mode: '0755'
+  
