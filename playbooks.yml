@@ -44,4 +44,7 @@
     - role: repos
       become: yes
       become_user: aleph
+    - role: go
+      become: yes
+      become_user: root
  
