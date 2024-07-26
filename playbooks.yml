@@ -16,6 +16,7 @@
           - xclip
           - vim-gtk
           - sudo
+          - clang-12
       become: yes
       become_user: root
     - role: users
