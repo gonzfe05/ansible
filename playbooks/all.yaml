@@ -21,6 +21,7 @@
           - clang-12
       become: yes
       become_user: root
+      tags: ['core']
     - role: users
       vars:
         users:
@@ -32,22 +33,29 @@
             password: ""
       become: yes
       become_user: root
+      tags: ['core']
     - role: ssh
       become: yes
       become_user: aleph
+      tags: ['core']
     - role: env_setup
       become: yes
       become_user: aleph
+      tags: ['core']
     - role: dotfiles
       become: yes
       become_user: aleph
+      tags: ['core']
     - role: aws
       become: yes
       become_user: aleph
+      tags: ['aws']
     - role: repos
       become: yes
       become_user: aleph
+      tags: ['projects']
     - role: go
       become: yes
       become_user: root
+      tags: ['go']
  
