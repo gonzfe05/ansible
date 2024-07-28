@@ -1,4 +1,5 @@
 #!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
 
 # Clone the repository into /tmp/
 echo "Cloning the repository..."
