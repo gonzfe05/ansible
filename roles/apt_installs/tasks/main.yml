@@ -4,6 +4,12 @@
     update_cache: "{{ apt_update_cache }}"
     cache_valid_time: "{{ apt_cache_valid_time }}"
 
+- name: Install custom ppa repos
+  ansible.builtin.apt_repository:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ apt_ppa_custom }}"
+
 - name: Upgrade all apt packages
   ansible.builtin.apt:
     upgrade: "{{ apt_upgrade }}"

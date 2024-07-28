@@ -4,6 +4,8 @@
   roles:
     - role: apt_installs
       vars:
+        apt_ppa_custom:
+          - ppa:jonathonf/vim
         apt_installs_custom:
           - openssh-client
           - git
