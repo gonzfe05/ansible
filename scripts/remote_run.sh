@@ -42,5 +42,5 @@ fi
 
 # Run the ansible-playbook command
 echo "Running ansible-playbook..."
-ansible-playbook playbooks/all.yaml --ask-vault-pass
+ansible-playbook playbooks/all.yaml --tags core --ask-vault-pass
 
