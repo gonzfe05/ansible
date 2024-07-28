@@ -6,7 +6,7 @@
 
 - name: Install custom ppa repos
   ansible.builtin.apt_repository:
-    name: "{{ item }}"
+    repo: "{{ item }}"
     state: present
   loop: "{{ apt_ppa_custom }}"
 
