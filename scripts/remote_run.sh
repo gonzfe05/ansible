@@ -1,6 +1,20 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 echo $DEBIAN_FRONTEND
+
+# The following two checks are necesary to copy to host's clipboard
+# Check if DISPLAY environment variable is set
+if [ -z "$DISPLAY" ]; then
+    echo "The DISPLAY environment variable is not set."
+    exit 1
+fi
+
+# Check if /tmp/.X11-unix directory exists
+if [ ! -d "/tmp/.X11-unix" ]; then
+    echo "The /tmp/.X11-unix directory does not exist."
+    exit 1
+fi
+
 # Clone the repository into /tmp/
 apt-get update
 apt-get install -y git
