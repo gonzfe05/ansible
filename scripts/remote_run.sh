@@ -2,7 +2,7 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # Clone the repository into /tmp/
-apt update && apt install git
+apt update && apt install git -y
 echo "Cloning the repository..."
 git clone https://github.com/gonzfe05/ansible /tmp/ansible
 
