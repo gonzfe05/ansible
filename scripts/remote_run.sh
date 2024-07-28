@@ -1,9 +1,9 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
-
+echo $DEBIAN_FRONTEND
 # Clone the repository into /tmp/
-apt update
-apt --yes install git
+apt-get update
+apt-get install git -y
 echo "Cloning the repository..."
 git clone https://github.com/gonzfe05/ansible /tmp/ansible
 
