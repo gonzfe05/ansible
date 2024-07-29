@@ -1,0 +1,13 @@
+---
+- name: Download nvm script
+  get_url:
+    url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh"
+    dest: "/tmp/nvm_install.sh"
+    mode: '0755'
+
+- name: Run nvm script
+  shell: /tmp/nvm_install.sh
+
+- name: Install node
+  shell: nvm install --lts
+ 

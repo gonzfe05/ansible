@@ -46,6 +46,10 @@
       become: yes
       become_user: aleph
       tags: ['core']
+    - role: node
+      become: yes
+      become_user: aleph
+      tags: ['core']
     - role: aws
       become: yes
       become_user: aleph
