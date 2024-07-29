@@ -11,5 +11,6 @@
 - name: Install node
   shell: |
     export NVM_DIR={{ ansible_env.HOME }}/.nvm
+    . "$NVM_DIR/nvm.sh"
     nvm install --lts
  
