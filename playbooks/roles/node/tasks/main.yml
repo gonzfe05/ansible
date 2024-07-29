@@ -9,5 +9,7 @@
   shell: /tmp/nvm_install.sh
 
 - name: Install node
-  shell: "{{ ansible_env.HOME }}/.nvm/nvm install --lts"
+  shell: |
+    export NVM_DIR={{ ansible_env.HOME }}/.nvm
+    nvm install --lts
  
