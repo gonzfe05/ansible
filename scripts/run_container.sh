@@ -23,6 +23,7 @@ docker run -it \
   -v "$(pwd)/work:/work" \
   -e DISPLAY=$DISPLAY \
   -w /ansible \
+  --rm \
   $PROJECT_NAME \
   bash -c "ansible-playbook playbooks/all.yaml --ask-vault-pass; exec bash"
 
