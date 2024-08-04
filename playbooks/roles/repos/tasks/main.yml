@@ -28,3 +28,13 @@
     accept_hostkey: true
     force: true
     version: main
+
+- name: Cloning ExpenseTracker
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/ExpenseTracker.git'
+    dest: "{{ personal_folder }}/ExpenseTracker"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
