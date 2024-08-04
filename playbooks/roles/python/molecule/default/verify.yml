@@ -4,6 +4,10 @@
   vars:
     python_version: 3.12
   tasks:
+    - name: Source the profile script
+      shell: . /etc/profile.d/python.sh
+      register: profile_sourced
+
     - name: Check if the Python package is installed
       command: "python3 --version"
       changed_when: false
