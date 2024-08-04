@@ -2,7 +2,7 @@
 - name: Verify python role
   hosts: instance
   vars:
-    pytohn_version: 3.12
+    python_version: 3.12
   tasks:
     - name: Check if the Python package is installed
       apt:
