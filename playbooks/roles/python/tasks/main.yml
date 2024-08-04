@@ -27,3 +27,7 @@
     content: |
       PATH=/opt/python/"{{ python_version }}"/bin:$PATH
     mode: '0644'
+
+- name: Source the profile script
+  shell: . /etc/profile.d/python.sh
+  register: profile_sourced
