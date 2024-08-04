@@ -62,4 +62,8 @@
       become: yes
       become_user: root
       tags: ['go']
+    - role: python
+      become: yes
+      become_user: root
+      tags: ['python']
  
