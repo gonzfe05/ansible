@@ -15,7 +15,7 @@ echo "Current directory: $(pwd)"
 # Allowing docker to use hsot's clipboard
 xhost +
 # Run the Docker container with volume mounting
-echo "Running Docker container..."
+echo "Running Docker container from $(pwd)"
 docker run -it \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v "$(pwd)":/ansible \
