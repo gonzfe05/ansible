@@ -5,7 +5,7 @@
     python_version: 3.12
   tasks:
     - name: Check if the Python package is installed
-      command: "python --version"
+      command: "python3 --version"
       changed_when: false
       failed_when: python_installed.rc != 0
       register: python_installed
@@ -18,4 +18,4 @@
     - name: Ensure the Python version is correct
       assert:
         that:
-          - "'Python {{ python_version }}' in python_installed.stdout"
+          - "'Python3 {{ python_version }}' in python_installed.stdout"
