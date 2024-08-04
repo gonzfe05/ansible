@@ -20,3 +20,10 @@
   apt:
     deb: "/tmp/python-{{ python_version }}_1_amd64.deb"
     state: present
+
+- name: Create a profile script for Python
+  copy:
+    dest: /etc/profile.d/python.sh
+    content: |
+      PATH=/opt/python/"{{ python_version }}"/bin:$PATH
+    mode: '0644'
