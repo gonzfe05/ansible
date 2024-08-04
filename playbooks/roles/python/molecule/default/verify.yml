@@ -17,7 +17,7 @@
 
     - name: Debug Python version output
       debug:
-        var: python_version_output
+        var: python_installed
 
     - name: Ensure the Python version is correct
       assert:
