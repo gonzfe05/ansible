@@ -13,7 +13,7 @@
         msg: "PATH is {{ lookup('env', 'PATH') }}"
 
     - name: Check if the Python package is installed
-      command: "python --version"
+      command: "python3 --version"
       changed_when: false
       failed_when: python_installed.rc != 0
       register: python_installed
