@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: instance
+  become: true
+  become_user: root
+  roles:
+    - role: python
+      vars:
+        python_version: 3.12

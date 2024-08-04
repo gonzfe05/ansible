@@ -1,0 +1,22 @@
+---
+- name: Get Ubuntu version
+  shell: lsb_release -r | awk '{print $2}'
+  register: ubuntu_version
+
+- name: Set Ubuntu version without dot
+  set_fact:
+    ubuntu_version_nodot: "{{ ubuntu_version.stdout | replace('.', '') }}"
+
+- name: Download Python package
+  get_url:
+    url: "https://cdn.rstudio.com/python/ubuntu-{{ ubuntu_version_nodot }}/pkgs/python-{{ python_version }}_1_amd64.deb"
+    dest: "/tmp/python-{{ python_version }}_1_amd64.deb"
+
+- name: Update apt cache
+  apt:
+    update_cache: true
+
+- name: Install Python package
+  apt:
+    deb: "/tmp/python-{{ python_version }}_1_amd64.deb"
+    state: present
