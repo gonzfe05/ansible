@@ -9,7 +9,7 @@
       register: profile_sourced
 
     - name: Check if the Python package is installed
-      command: "python3 --version"
+      command: "python --version"
       changed_when: false
       failed_when: python_installed.rc != 0
       register: python_installed
