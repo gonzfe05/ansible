@@ -8,6 +8,10 @@
       shell: . /etc/profile.d/python.sh
       register: profile_sourced
 
+    - name: Debug PATH variable
+      debug:
+        msg: "PATH is {{ lookup('env', 'PATH') }}"
+
     - name: Check if the Python package is installed
       command: "python --version"
       changed_when: false
