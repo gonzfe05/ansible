@@ -1,0 +1,53 @@
+---
+- name: after_format
+  hosts: localhost
+  roles:
+    - role: apt_installs
+      vars:
+        apt_ppa_custom:
+          - ppa:jonathonf/vim
+        apt_installs_custom:
+          - openssh-client
+          - git
+          - zsh
+          - tmux
+          - stow
+          - fzf
+          - zip
+          - vim
+          - xclip
+          - vim-gtk
+          - sudo
+          - clang-12
+      become: true
+      become_user: root
+      tags: ['core']
+    - role: users
+      vars:
+        users:
+          - name: aleph
+            uid: 1001
+            shell: /bin/bash
+            comment: "Aleph User"
+            groups: "admin,sudo"
+            password: ""
+      become: true
+      become_user: root
+      tags: ['core']
+    - role: ssh
+      become: true
+      become_user: aleph
+      tags: ['core']
+    - role: env_setup
+      become: true
+      become_user: aleph
+      tags: ['core']
+    - role: dotfiles
+      become: true
+      become_user: aleph
+      tags: ['core']
+    - role: aws
+      become: true
+      become_user: aleph
+      tags: ['aws']
+ 

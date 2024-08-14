@@ -1,5 +1,5 @@
 ---
-- name: Test
+- name: container
   hosts: localhost
   roles:
     - role: apt_installs

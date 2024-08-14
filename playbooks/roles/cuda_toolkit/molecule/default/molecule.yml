@@ -1,0 +1,32 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: ubuntu:latest
+    privileged: true
+    become: yes
+    pre_build_image: false  # Ensures that the image is built with the required packages
+provisioner:
+  name: ansible
+  lint: |
+    set -e
+    yamllint .
+    ansible-lint
+  playbooks:
+    prepare: prepare.yml  # Specify the prepare playbook
+    converge: converge.yml
+scenario:
+  name: default
+  test_sequence:
+    # - lint
+    - dependency
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+verifier:
+  name: ansible

@@ -1,0 +1,104 @@
+---
+- name: Add the PPA for GCC if needed
+  ansible.builtin.apt_repository:
+    repo: ppa:ubuntu-toolchain-r/test
+    state: present
+  become: true
+
+- name: Update the apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+
+- name: Install GCC and G++
+  ansible.builtin.apt:
+    name:
+      - gcc-{{ gcc_version }}
+      - g++
+    state: present
+  become: true
+
+- name: Verify GCC version
+  ansible.builtin.command: gcc --version
+  register: gcc_version_output
+
+- name: Debug print GCC version output
+  ansible.builtin.debug:
+    msg: "GCC version output: {{ gcc_version_output.stdout }}"
+
+- name: Ensure GCC version is correct
+  ansible.builtin.assert:
+    that:
+      - "'{{ gcc_version_check }}' in gcc_version_output.stdout"
+    fail_msg: "GCC version is not as expected! Installed version: {{ gcc_version_output.stdout }}"
+    success_msg: "GCC version is correctly installed."
+
+# - name: Get the current kernel version
+#   ansible.builtin.command: uname -r
+#   register: kernel_version
+
+# - name: Install kernel headers and development packages for the running kernel
+#   ansible.builtin.apt:
+#     name: "linux-headers-{{ kernel_version.stdout }}"
+#     state: present
+#   become: true
+#   tags: cuda_preparation
+
+- name: Remove outdated NVIDIA signing key
+  ansible.builtin.command: apt-key del 7fa2af80
+  become: true
+  ignore_errors: true  # Ignore errors in case the key doesn't exist
+  tags: cuda_preparation
+
+- name: Download the new cuda-keyring package
+  ansible.builtin.get_url:
+    url: https://developer.download.nvidia.com/compute/cuda/repos/{{ cuda_distro }}/{{ cuda_architecture }}/cuda-keyring_1.1-1_all.deb
+    dest: /tmp/cuda-keyring_1.1-1_all.deb
+  tags: cuda_preparation
+
+- name: Install the new cuda-keyring package using dpkg
+  ansible.builtin.command: dpkg -i /tmp/cuda-keyring_1.1-1_all.deb
+  become: true
+  tags: cuda_preparation
+
+- name: Update the Apt repository cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+  tags: cuda_preparation
+
+- name: Install CUDA toolkit
+  ansible.builtin.apt:
+    name: cuda-toolkit
+    state: present
+  become: true
+  tags: cuda_preparation
+
+- name: Verify CUDA installation by running nvidia-smi
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_smi_output
+  ignore_errors: true
+  tags: cuda_preparation
+
+- name: Trigger reboot
+  ansible.builtin.reboot:
+  tags: cuda_preparation
+
+- name: Verify CUDA installation by running nvidia-smi
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_smi_output
+  ignore_errors: true
+  tags: cuda_preparation
+
+- name: Debug print nvidia-smi output
+  ansible.builtin.debug:
+    msg: "nvidia-smi output: {{ nvidia_smi_output.stdout }}"
+
+# - name: Ensure CUDA installation is successful
+#   ansible.builtin.assert:
+#     that:
+#       - "'NVIDIA-SMI' in nvidia_smi_output.stdout"
+#       - "'Driver Version' in nvidia_smi_output.stdout"
+#     fail_msg: "CUDA installation failed! nvidia-smi did not return expected output."
+#     success_msg: "CUDA installation verified successfully with nvidia-smi."
+#   tags: cuda_preparation

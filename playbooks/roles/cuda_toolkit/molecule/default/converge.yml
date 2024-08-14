@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: instance
+  vars:
+    gcc_version: "13"
+    gcc_version_check: "13.2.0"
+    cuda_distro: "ubuntu2404"
+    cuda_version: "12.0"
+    cuda_architecture: "x86_64"
+  roles:
+    - role: cuda
