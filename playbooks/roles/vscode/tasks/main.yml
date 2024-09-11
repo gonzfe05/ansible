@@ -11,13 +11,19 @@
     url: "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64"
     dest: "/tmp/vscode_cli.tar.gz"
     mode: '0755'
-    force: true
+    force: yes
+
+- name: Create /usr/local/bin directory if not exists
+  ansible.builtin.file:
+    path: "/usr/local/bin"
+    state: directory
+    mode: '0755'
 
 - name: Extract VSCode server
   ansible.builtin.unarchive:
     src: "/tmp/vscode_cli.tar.gz"
-    dest: "/opt/vscode-server"
-    remote_src: true
+    dest: "/usr/local/bin"
+    remote_src: yes
 
 - name: Clean up temporary files
   ansible.builtin.file:

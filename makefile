@@ -4,4 +4,4 @@
 image ?= ansible
 
 run:
-	./scripts/container.sh $(image)
+	scripts/run_container.sh $(image)

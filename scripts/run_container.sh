@@ -25,5 +25,5 @@ docker run -it \
   -w /ansible \
   --rm \
   $PROJECT_NAME \
-  bash -c "ansible-playbook playbooks/all.yaml --ask-vault-pass; exec bash"
+  bash -c "ansible-playbook playbooks/container.yaml --ask-vault-pass; exec bash"
 

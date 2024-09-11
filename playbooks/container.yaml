@@ -19,7 +19,7 @@
           - vim-gtk
           - sudo
           - clang-12
-      become: yes
+      become: true
       become_user: root
       tags: ['core']
     - role: users
@@ -31,39 +31,43 @@
             comment: "Aleph User"
             groups: "admin,sudo"
             password: ""
-      become: yes
+      become: true
       become_user: root
       tags: ['core']
     - role: ssh
-      become: yes
+      become: true
       become_user: aleph
       tags: ['core']
     - role: env_setup
-      become: yes
+      become: true
       become_user: aleph
       tags: ['core']
     - role: dotfiles
-      become: yes
+      become: true
       become_user: aleph
       tags: ['core']
+    - role: vscode
+      become: true
+      become_user: root
+      tags: ['core']
     - role: node
-      become: yes
+      become: true
       become_user: aleph
       tags: ['core']
     - role: aws
-      become: yes
+      become: true
       become_user: aleph
       tags: ['aws']
     - role: repos
-      become: yes
+      become: true
       become_user: aleph
       tags: ['projects']
     - role: go
-      become: yes
+      become: true
       become_user: root
       tags: ['go']
     - role: python
-      become: yes
+      become: true
       become_user: root
       tags: ['python']
  
