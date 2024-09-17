@@ -29,6 +29,7 @@ docker run -it \
   -v "$(pwd)/personal:/personal" \
   -v "$(pwd)/work:/work" \
   -e DISPLAY=$DISPLAY \
+  --network="host" \
   -w /ansible \
   --rm \
   $PROJECT_NAME \
