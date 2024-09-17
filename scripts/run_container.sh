@@ -12,6 +12,13 @@ PROJECT_NAME="$1"
 # Print the current directory
 echo "Current directory: $(pwd)"
 
+# These permissions allow the sudo group for which the aleph user belongs to
+sudo chown root:sudo personal
+sudo chmod g+rwx personal
+
+sudo chown root:sudo work
+sudo chmod g+rwx work
+
 # Allowing docker to use hsot's clipboard
 xhost +
 # Run the Docker container with volume mounting
@@ -25,5 +32,5 @@ docker run -it \
   -w /ansible \
   --rm \
   $PROJECT_NAME \
-  bash -c "ansible-playbook playbooks/container.yaml --ask-vault-pass; exec bash"
+  bash -c "scripts/install_ansible.sh && ansible-playbook playbooks/container.yaml --ask-vault-pass; exec bash"
 

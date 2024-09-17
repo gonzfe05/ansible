@@ -1,0 +1,26 @@
+---
+- name: Add the CRAN GPG key
+  ansible.builtin.apt_key:
+    url: 'https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc'
+    state: present
+
+- name: Add the R repository
+  ansible.builtin.apt_repository:
+    repo: 'deb https://cloud.r-project.org/bin/linux/ubuntu {{ ansible_distribution_release }}-cran40/'
+    state: present
+
+- name: Update the package list
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install R base
+  ansible.builtin.apt:
+    name: r-base
+    state: present
+
+- name: Install additional R build dependencies (optional)
+  ansible.builtin.apt:
+    name:
+      - r-base-dev
+    state: present
+

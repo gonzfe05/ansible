@@ -6,9 +6,7 @@
     mode: '0755'
 
 - name: Remove any previous Go installation
-  command: rm -rf /usr/local/go
-  args:
-    warn: false
+  ansible.builtin.command: rm -rf /usr/local/go
 
 - name: Extract Go tarball
   unarchive:

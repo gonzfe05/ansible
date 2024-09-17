@@ -38,3 +38,43 @@
     accept_hostkey: true
     force: true
     version: main
+
+- name: Cloning customer_simulation
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/customer_simulation.git'
+    dest: "{{ personal_folder }}/customer_simulation"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Cloning alohomora
+  ansible.builtin.git:
+    repo: 'git@github.com:aureka-team/alohomora-ui.git'
+    dest: "{{ work_folder }}/alohomora"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Cloning wahlkompass-talks
+  ansible.builtin.git:
+    repo: 'git@github.com:aureka-team/wahlkompass-talks.git'
+    dest: "{{ work_folder }}/wahlkompass-talks"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
+
+- name: Cloning archist
+  ansible.builtin.git:
+    repo: 'git@github.com:aureka-team/archist.git'
+    dest: "{{ work_folder }}/archist"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
