@@ -11,7 +11,7 @@
     remote_src: yes
 
 - name: Install AWS CLI
-  command: sudo /tmp/aws/install
+  command: sudo /tmp/aws/install --update
 
 - name: Check if AWS CLI is installed
   command: aws --version

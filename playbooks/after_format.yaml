@@ -4,8 +4,6 @@
   roles:
     - role: apt_installs
       vars:
-#        apt_ppa_custom:
-#          - ppa:jonathonf/vim
         apt_installs_custom:
           - openssh-client
           - git
@@ -16,9 +14,10 @@
           - zip
           - vim
           - xclip
-          - vim-gtk
+          - vim-gtk3
           - sudo
-          - clang-12
+            #- clang-12
+          - build-essential
       become: true
       become_user: root
       tags: ['core']
@@ -46,8 +45,32 @@
       become: true
       become_user: aleph
       tags: ['core']
+    - role: vscode
+      become: true
+      become_user: root
+      tags: ['core']
+    - role: node
+      become: true
+      become_user: aleph
+      tags: ['core']
     - role: aws
       become: true
       become_user: aleph
       tags: ['aws']
- 
+        #    - role: repos
+        #      become: true
+        #      become_user: aleph
+        #      tags: ['projects']
+    - role: go
+      become: true
+      become_user: root
+      tags: ['go']
+    - role: python
+      become: true
+      become_user: root
+      tags: ['python']
+    - role: R
+      become: true
+      become_user: root
+      tags: ['R']
+
