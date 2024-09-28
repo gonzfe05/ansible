@@ -12,7 +12,14 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo groupadd docker
+# Check if the docker group exists, and create it if it doesn't:
+if ! getent group docker > /dev/null; then
+    sudo groupadd docker
+fi
+
+# Add the current user to the docker group:
 sudo usermod -aG docker $USER
 newgrp docker
+
+# Run hello-world to verify installation:
 docker run hello-world
