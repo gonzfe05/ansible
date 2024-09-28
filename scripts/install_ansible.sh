@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# Ensure the script runs with root privileges
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root or use sudo."
+    exit 1
+fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt update
