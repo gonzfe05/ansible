@@ -1,0 +1,6 @@
+---
+- name: after_format
+  hosts: localhost
+  roles:
+    - role: cuda_container_toolkit
+      become: true 
