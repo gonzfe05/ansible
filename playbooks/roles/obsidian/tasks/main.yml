@@ -1,0 +1,14 @@
+---
+- name: Install Obsidian via snap
+  ansible.builtin.command: "sudo snap install obsidian --classic"
+  become: yes
+
+- name: Verify Obsidian installation
+  ansible.builtin.command: "snap list obsidian"
+  register: obsidian_installation
+  failed_when: obsidian_installation.rc != 0
+
+- name: Display Obsidian installation status
+  ansible.builtin.debug:
+    msg: "Obsidian is successfully installed"
+  when: obsidian_installation.rc == 0

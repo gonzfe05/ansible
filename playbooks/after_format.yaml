@@ -73,4 +73,8 @@
       become: true
       become_user: root
       tags: ['R']
+    - role: obsidian
+      become: true
+      become_user: aleph
+      tags: ['obsidian']
 
