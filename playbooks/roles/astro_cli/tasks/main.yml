@@ -7,13 +7,13 @@
 
 - name: Download Astro CLI v0.29.0 for Linux AMD64
   get_url:
-    url: "https://github.com/astronomer/astro-cli/releases/download/v0.29.0/astro_0.29.0_linux_amd64.tar.gz"
-    dest: "/tmp/astro_0.29.0_linux_amd64.tar.gz"
+    url: "https://github.com/astronomer/astro-cli/releases/download/v1.34.0/astro_1.34.0_linux_amd64.tar.gz"
+    dest: "/tmp/astro_1.34.0_linux_amd64.tar.gz"
     mode: '0644'
 
 - name: Extract Astro CLI binary
   unarchive:
-    src: "/tmp/astro_0.29.0_linux_amd64.tar.gz"
+    src: "/tmp/astro_1.34.0_linux_amd64.tar.gz"
     dest: "/tmp/"
     remote_src: yes
     creates: "/tmp/astro"
