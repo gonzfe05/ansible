@@ -57,10 +57,10 @@
       become: true
       become_user: aleph
       tags: ['aws']
-        #    - role: repos
-        #      become: true
-        #      become_user: aleph
-        #      tags: ['projects']
+    - role: repos
+      become: true
+      become_user: aleph
+      tags: ['projects']
     - role: go
       become: true
       become_user: root
@@ -77,4 +77,8 @@
       become: true
       become_user: aleph
       tags: ['obsidian']
+    - role: astro
+      become: true
+      become_user: aleph
+      tags: ['astro']
 

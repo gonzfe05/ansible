@@ -1,0 +1,13 @@
+galaxy_info:
+  role_name: astro_cli
+  namespace: gonzfe05
+  author: Fernando Gonzalez
+  description: Install Astro CLI v0.29.0 for local airflow dev
+
+  license: MIT
+
+  min_ansible_version: "2.1"
+
+  galaxy_tags: ["astro"]
+
+dependencies: []

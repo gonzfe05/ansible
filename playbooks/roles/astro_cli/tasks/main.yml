@@ -1,0 +1,42 @@
+---
+- name: Remove existing astro CLI if present
+  file:
+    path: /usr/local/bin/astro
+    state: absent
+  become: true
+
+- name: Download Astro CLI v0.29.0 for Linux AMD64
+  get_url:
+    url: "https://github.com/astronomer/astro-cli/releases/download/v0.29.0/astro_0.29.0_linux_amd64.tar.gz"
+    dest: "/tmp/astro_0.29.0_linux_amd64.tar.gz"
+    mode: '0644'
+
+- name: Extract Astro CLI binary
+  unarchive:
+    src: "/tmp/astro_0.29.0_linux_amd64.tar.gz"
+    dest: "/tmp/"
+    remote_src: yes
+    creates: "/tmp/astro"
+
+- name: Make astro binary executable
+  file:
+    path: /tmp/astro
+    mode: '0755'
+    state: file
+
+- name: Move astro binary to /usr/local/bin
+  copy:
+    src: /tmp/astro
+    dest: /usr/local/bin/astro
+    remote_src: yes
+    mode: '0755'
+  become: true
+
+- name: Ensure astro is available and correct version
+  command: astro version
+  register: astro_version_check
+  changed_when: false
+
+- name: Print installed version
+  debug:
+    msg: "{{ astro_version_check.stdout }}"

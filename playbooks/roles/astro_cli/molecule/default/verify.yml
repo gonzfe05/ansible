@@ -1,0 +1,13 @@
+---
+- name: Verify astro_cli installation
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Run `astro version`
+      command: astro version
+      register: astro_version_output
+      changed_when: false
+      failed_when: "'0.29.0' not in astro_version_output.stdout"
+
+    - debug:
+        msg: "{{ astro_version_output.stdout }}"
