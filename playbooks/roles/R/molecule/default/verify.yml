@@ -1,33 +1,27 @@
 ---
-- name: Verify python role
-  hosts: instance
-  vars:
-    python_version: 3.12
+- name: Verify R installation
+  hosts: all
+  gather_facts: false
   tasks:
-    - name: Source the profile script
-      shell: . /etc/profile.d/python.sh
-      register: profile_sourced
 
-    - name: Debug PATH variable
-      debug:
-        msg: "PATH is {{ lookup('env', 'PATH') }}"
-
-    - name: Check if the Python package is installed
-      command: "python3 --version"
+    - name: Check that R is installed
+      ansible.builtin.command: R --version
+      register: r_version
       changed_when: false
-      failed_when: python_installed.rc != 0
-      register: python_installed
+      failed_when: r_version.rc != 0
 
-    - name: Ensure Python package is installed
-      assert:
-        that:
-          - python_installed.rc == 0
-
-    - name: Debug Python version output
+    - name: Print R version
       debug:
-        var: python_installed
+        var: r_version.stdout
 
-    - name: Ensure the Python version is correct
-      assert:
-        that:
-          - "'Python {{ python_version }}' in python_installed.stdout"
+    - name: Verify the CRAN repository is configured
+      ansible.builtin.command: grep -R 'https://cloud.r-project.org/bin/linux/ubuntu.*cran40' /etc/apt/sources.list /etc/apt/sources.list.d/
+      register: cran_repo_check
+      changed_when: false
+      failed_when: cran_repo_check.rc != 0
+
+    - name: Ensure GPG key is present
+      ansible.builtin.command: apt-key list
+      register: gpg_keys
+      changed_when: false
+      failed_when: "'marutter@gmail.com' not in gpg_keys.stdout"

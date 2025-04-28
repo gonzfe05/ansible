@@ -4,6 +4,12 @@
   become: true
   become_user: root
   roles:
-    - role: python
+    - role: apt_installs
       vars:
-        python_version: 3.12.3
+        apt_update_cache: true
+        apt_cache_valid_time: 3600
+        apt_ppa_custom: []
+        apt_upgrade: false
+        apt_installs_custom:
+          - gnupg
+    - role: R
