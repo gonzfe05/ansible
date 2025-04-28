@@ -75,4 +75,8 @@
       become: true
       become_user: root
       tags: ['R']
+    - role: astro
+      become: true
+      become_user: root
+      tags: ['astro']
 
