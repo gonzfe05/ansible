@@ -1,14 +1,36 @@
 ---
-- name: Install Obsidian via snap
-  ansible.builtin.command: "sudo snap install obsidian --classic"
+- name: Install Obsidian runtime dependencies
+  apt:
+    name:
+      - libgtk-3-0
+      - libnss3
+      - libxss1
+      - libasound2
+      - libatk-bridge2.0-0
+      - libx11-xcb1
+    state: present
+    update_cache: yes
   become: yes
+  
+- name: Download Obsidian .deb (static URL)
+  ansible.builtin.get_url:
+    url: https://github.com/obsidianmd/obsidian-releases/releases/download/v1.8.10/obsidian_1.8.10_amd64.deb
+    dest: /tmp/obsidian.deb
+    mode: '0644'
 
-- name: Verify Obsidian installation
-  ansible.builtin.command: "snap list obsidian"
+- name: Install Obsidian from .deb
+  ansible.builtin.apt:
+    deb: /tmp/obsidian.deb
+  become: yes
+  register: obsidian_deb_install
+
+- name: Verify Obsidian installation (check binary exists)
+  ansible.builtin.command: which obsidian
   register: obsidian_installation
+  changed_when: false
   failed_when: obsidian_installation.rc != 0
 
 - name: Display Obsidian installation status
   ansible.builtin.debug:
-    msg: "Obsidian is successfully installed"
+    msg: "Obsidian is successfully installed at {{ obsidian_installation.stdout }}"
   when: obsidian_installation.rc == 0

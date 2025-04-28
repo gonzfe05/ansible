@@ -1,10 +1,27 @@
 ---
 - name: Verify Obsidian installation
-  ansible.builtin.command: "snap list obsidian"
-  register: obsidian_installation
-  failed_when: obsidian_installation.rc != 0
+  hosts: all
+  gather_facts: false
+  tasks:
 
-- name: Display Obsidian installation status
-  ansible.builtin.debug:
-    msg: "Obsidian is successfully installed"
-  when: obsidian_installation.rc == 0
+    - name: Check if Obsidian binary is available
+      ansible.builtin.command: which obsidian
+      register: obsidian_binary
+      changed_when: false
+      failed_when: obsidian_binary.rc != 0
+
+    - name: Print path to Obsidian binary
+      ansible.builtin.debug:
+        msg: "Obsidian is installed at {{ obsidian_binary.stdout }}"
+
+    - name: Check if Obsidian desktop entry exists
+      ansible.builtin.stat:
+        path: /usr/share/applications/obsidian.desktop
+      register: obsidian_desktop_entry
+
+    - name: Assert that Obsidian desktop file exists
+      ansible.builtin.assert:
+        that:
+          - obsidian_desktop_entry.stat.exists
+        fail_msg: "Obsidian desktop entry is missing!"
+        success_msg: "Obsidian desktop entry is present."
