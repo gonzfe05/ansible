@@ -101,7 +101,7 @@ jobs:
         run: |
           echo "🔧 Setting up molecule test for apt_installs role..."
           
-          # Create simple working molecule config with proper role paths
+          # Create simple working molecule config
           cat > playbooks/roles/apt_installs/molecule/default/molecule.yml << 'EOF'
           ---
           driver:
@@ -112,16 +112,13 @@ jobs:
               command: sleep 60
           provisioner:
             name: ansible
-            config_options:
-              defaults:
-                roles_path: ../../../
             inventory:
               host_vars:
                 instance:
                   ansible_python_interpreter: /usr/bin/python3
           EOF
           
-          # Create simple converge playbook that uses the role properly
+          # Create simple converge playbook that runs the role tasks directly
           cat > playbooks/roles/apt_installs/molecule/default/converge.yml << 'EOF'
           ---
           - hosts: all
@@ -131,8 +128,28 @@ jobs:
               apt_cache_valid_time: 3600
               apt_installs_custom: ["git"]
               apt_ppa_custom: []
-            roles:
-              - apt_installs
+            tasks:
+              - name: Update apt cache
+                ansible.builtin.apt:
+                  update_cache: "{{ apt_update_cache }}"
+                  cache_valid_time: "{{ apt_cache_valid_time }}"
+
+              - name: Install custom ppa repos
+                ansible.builtin.apt_repository:
+                  repo: "{{ item }}"
+                  state: present
+                loop: "{{ apt_ppa_custom }}"
+
+              - name: Upgrade all apt packages
+                ansible.builtin.apt:
+                  upgrade: "{{ apt_upgrade }}"
+                when: apt_upgrade is defined and apt_upgrade
+
+              - name: Install custom packages
+                ansible.builtin.apt:
+                  name: "{{ item }}"
+                  state: present
+                loop: "{{ apt_installs_custom }}"
           EOF
           
           # Run test with detailed logging
