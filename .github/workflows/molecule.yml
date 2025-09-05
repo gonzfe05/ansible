@@ -2,11 +2,16 @@
 name: molecule
 
 on:
-  workflow_dispatch:
+  # Trigger on ALL pull requests to ensure CI runs
+  pull_request:
+    branches: [ main, master ]
+  
+  # Trigger on pushes to main
   push:
-    branches: [ main ]
-    paths:
-      - "playbooks/roles/**"
+    branches: [ main, master ]
+  
+  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   test:
@@ -14,9 +19,11 @@ jobs:
     timeout-minutes: 10
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -24,9 +31,24 @@ jobs:
         run: |
           pip install ansible-core molecule "molecule-plugins[docker]"
 
+      - name: Check if roles changed
+        id: changes
+        run: |
+          echo "Checking for changes in playbooks/roles..."
+          if git diff --name-only ${{ github.event.before }}..${{ github.sha }} | grep -q "playbooks/roles/" || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_tests=true" >> $GITHUB_OUTPUT
+            echo "✅ Role changes detected or manual trigger - running tests"
+          else
+            echo "run_tests=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No role changes detected - skipping tests"
+          fi
+
       - name: Test apt_installs role
+        if: steps.changes.outputs.run_tests == 'true'
         run: |
           cd playbooks/roles/apt_installs
+          
+          echo "🔧 Creating molecule configuration..."
           
           # Create simple working molecule config
           cat > molecule/default/molecule.yml << 'EOF'
@@ -60,11 +82,19 @@ jobs:
                   name: apt_installs
           EOF
           
-          # Run test
-          echo "Starting molecule test..."
+          # Run test with detailed logging
+          echo "🚀 Starting molecule test..."
           molecule create
-          echo "Container created successfully"
+          echo "✅ Container created successfully"
+          
           molecule converge
-          echo "Converge completed successfully"
+          echo "✅ Converge completed successfully"
+          
           molecule destroy
-          echo "Test completed successfully!"
+          echo "🎉 Test completed successfully!"
+
+      - name: Skip message
+        if: steps.changes.outputs.run_tests == 'false'
+        run: |
+          echo "ℹ️ Skipping molecule tests - no changes in playbooks/roles/"
+          echo "This is normal for PRs that don't modify Ansible roles."

@@ -1,0 +1,43 @@
+---
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Basic CI Check
+        run: |
+          echo "🔍 CI is running!"
+          echo "Event: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "PR: ${{ github.event.pull_request.number }}"
+          
+      - name: Check repository structure
+        run: |
+          echo "📁 Repository structure:"
+          ls -la
+          echo ""
+          echo "📁 Roles available:"
+          ls -la playbooks/roles/ | head -10
+          
+      - name: Validate YAML files
+        run: |
+          echo "✅ Checking YAML syntax..."
+          find .github/workflows -name "*.yml" | while read file; do
+            echo "Checking $file..."
+            python3 -c "import yaml; yaml.safe_load(open('$file')); print('✅ Valid')"
+          done
+          
+      - name: Success
+        run: |
+          echo "🎉 CI completed successfully!"
+          echo "✅ All checks passed"

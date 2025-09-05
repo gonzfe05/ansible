@@ -4,13 +4,30 @@ This directory contains the CI/CD workflows for the Ansible playbooks and roles.
 
 ## Workflows
 
+### CI (`ci.yml`)
+
+Basic continuous integration workflow that runs on every PR and push.
+
+**Triggers:**
+- All pull requests (no path restrictions)
+- Pushes to `main`/`master` branches
+- Manual dispatch
+
+**What it does:**
+- ✅ Validates repository structure
+- ✅ Checks YAML syntax of workflow files
+- ✅ Provides clear success/failure feedback
+- ✅ Always runs (no path filters to block execution)
+
 ### Molecule Tests (`molecule.yml`)
 
 Ultra-simplified, bulletproof CI workflow that tests one Ansible role reliably.
 
 **Triggers:**
-- Push to `main` branch (only when `playbooks/roles/**` changes)
+- All pull requests to `main`/`master` branches
+- Pushes to `main`/`master` branches  
 - Manual dispatch via GitHub Actions UI
+- **Smart Detection**: Only runs molecule tests if roles actually changed
 
 **Approach:**
 - **Single Role Focus**: Tests `apt_installs` role (most fundamental)
