@@ -99,12 +99,10 @@ jobs:
       - name: Test apt_installs role
         if: steps.changes.outputs.run_tests == 'true'
         run: |
-          cd playbooks/roles/apt_installs
+          echo "🔧 Setting up molecule test for apt_installs role..."
           
-          echo "🔧 Creating molecule configuration..."
-          
-          # Create simple working molecule config
-          cat > molecule/default/molecule.yml << 'EOF'
+          # Create simple working molecule config with proper role paths
+          cat > playbooks/roles/apt_installs/molecule/default/molecule.yml << 'EOF'
           ---
           driver:
             name: docker
@@ -114,10 +112,17 @@ jobs:
               command: sleep 60
           provisioner:
             name: ansible
+            config_options:
+              defaults:
+                roles_path: ../../../
+            inventory:
+              host_vars:
+                instance:
+                  ansible_python_interpreter: /usr/bin/python3
           EOF
           
-          # Create simple converge playbook
-          cat > molecule/default/converge.yml << 'EOF'
+          # Create simple converge playbook that uses the role properly
+          cat > playbooks/roles/apt_installs/molecule/default/converge.yml << 'EOF'
           ---
           - hosts: all
             become: true
@@ -126,17 +131,20 @@ jobs:
               apt_cache_valid_time: 3600
               apt_installs_custom: ["git"]
               apt_ppa_custom: []
-            tasks:
-              - name: Update apt cache
-                apt:
-                  update_cache: yes
-              - name: Include role
-                include_role:
-                  name: apt_installs
+            roles:
+              - apt_installs
           EOF
           
           # Run test with detailed logging
           echo "🚀 Starting molecule test..."
+          cd playbooks/roles/apt_installs
+          
+          echo "Current directory: $(pwd)"
+          echo "Role structure:"
+          ls -la ../../../
+          echo "This role structure:"
+          ls -la .
+          
           molecule create
           echo "✅ Container created successfully"
           

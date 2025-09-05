@@ -121,4 +121,22 @@ Once workflows are committed and pushed:
 3. **Check Actions tab**: Should see workflows running within 1 minute
 4. **Verify PR status**: Green checkmarks should appear
 
+## 🔧 **Recent Fix Applied**
+
+### Issue: Role Path Error in Molecule
+```
+Error: the role 'apt_installs' was not found in /path/to/molecule/default/roles
+```
+
+**Root Cause**: Molecule running from within role directory couldn't find the role itself.
+
+**Solution Applied**:
+1. **Fixed Role Path**: Added `roles_path: ../../../` to molecule configuration
+2. **Proper Role Usage**: Changed from `include_role` to `roles:` syntax
+3. **Debug Logging**: Added directory structure logging for troubleshooting
+
+**Expected Result**: Role will now be found and tests will run successfully.
+
+---
+
 The workflows are ready and syntactically correct - they just need to be committed to trigger! 🚀
