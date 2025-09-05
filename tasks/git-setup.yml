@@ -30,3 +30,17 @@
         name: user.email
         scope: global
         value: "{{ email }}"
+    
+    - name: Configure git to use SSH for GitHub
+      become_user: "{{ username }}"
+      community.general.git_config:
+        name: url."git@github.com:".insteadOf
+        scope: global
+        value: "https://github.com/"
+    
+    - name: Set git to use SSH agent
+      become_user: "{{ username }}"
+      community.general.git_config:
+        name: core.sshCommand
+        scope: global
+        value: "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
