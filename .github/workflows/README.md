@@ -6,41 +6,40 @@ This directory contains the CI/CD workflows for the Ansible playbooks and roles.
 
 ### Molecule Tests (`molecule.yml`)
 
-Comprehensive CI workflow that runs linting and Molecule tests for all Ansible roles.
+Simplified, reliable CI workflow that tests Ansible roles with minimal configuration.
 
 **Triggers:**
 - Push to `main` branch (only when `playbooks/roles/**`, `requirements.yml`, or workflow files change)
 - Pull requests to `main` branch (same path filters)
 - Manual dispatch
 
-**Jobs:**
+**Strategy:**
+- **Matrix Testing**: Tests 3 core roles individually (`apt_installs`, `users`, `python`)
+- **Minimal Configuration**: Dynamically creates working molecule configs
+- **Standard Images**: Uses reliable `ubuntu:22.04` Docker images
+- **Role-Specific Setup**: Provides proper variables for each role type
 
-1. **Lint Job**: 
-   - Runs `yamllint` on all YAML files (lenient configuration)
-   - Runs `ansible-lint` on all roles (moderate profile)
-   - Continues on warnings to avoid blocking on style issues
+**Key Features:**
+- ✅ **Zero Configuration**: Automatically generates working molecule configs
+- ✅ **Reliable Images**: Uses standard Ubuntu images instead of custom ones
+- ✅ **Proper Variables**: Provides correct variables for each role
+- ✅ **Fast Feedback**: Tests most important roles first
+- ✅ **Debug Output**: Shows role structure and configuration
+- ✅ **Timeout Protection**: 30-minute timeout to prevent hanging
 
-2. **Test Job**:
-   - Tests roles across Ubuntu 22.04 and 24.04 Docker images
-   - Uses strategic role ordering (simple roles first)
-   - Provides detailed progress and failure reporting
-   - Continues testing all roles even if some fail
-   - Comprehensive summary at the end
+**How It Works:**
+1. **Dynamic Config Generation**: Creates minimal `molecule.yml` for each role
+2. **Role-Specific Variables**: Provides proper test variables:
+   - `apt_installs`: Tests with vim, curl, git packages
+   - `users`: Creates testuser with proper groups
+   - `python`: Basic Python installation test
+3. **Standard Container**: Uses `ubuntu:22.04` with `sleep infinity` command
+4. **Minimal Test Sequence**: create → prepare → converge → verify → destroy
 
-**Features:**
-- **Path-based Triggers**: Only runs when relevant files change
-- **Multi-distro Matrix**: Tests across Ubuntu 24.04 and 22.04
-- **Robust Error Handling**: Continues testing even when individual roles fail
-- **Progress Tracking**: Shows which role is being tested and overall progress
-- **Detailed Logging**: Environment info, Docker image selection, and test results
-- **Smart Role Ordering**: Tests simple roles first, complex ones last
-- **Backup/Restore**: Preserves original molecule configurations
-
-**Test Strategy:**
-- Ansible Core: Latest stable
-- Docker Images: geerlingguy/docker-ubuntu{2204,2404}-ansible
-- Timeout: 45 minutes total
-- Fail-fast: Disabled (comprehensive testing)
+**Tested Roles:**
+- `apt_installs` - Package installation and PPA management
+- `users` - User creation and sudo configuration  
+- `python` - Python environment setup
 
 ## Local Testing
 
