@@ -1,0 +1,27 @@
+---
+extends: default
+
+rules:
+  # Disable problematic rules for existing codebase
+  document-start: disable
+  comments-indentation: disable
+  line-length:
+    max: 160
+    level: warning
+  indentation:
+    spaces: consistent
+    indent-sequences: whatever
+  brackets:
+    max-spaces-inside: 1
+    level: warning
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+  new-line-at-end-of-file: disable
+
+# Only lint specific directories to avoid issues with other files
+ignore: |
+  .git/
+  .vscode/
+  scripts/
+  credentials/

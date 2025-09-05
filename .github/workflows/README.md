@@ -6,26 +6,41 @@ This directory contains the CI/CD workflows for the Ansible playbooks and roles.
 
 ### Molecule Tests (`molecule.yml`)
 
-Runs Molecule tests for all Ansible roles with multi-distro testing matrix.
+Comprehensive CI workflow that runs linting and Molecule tests for all Ansible roles.
 
 **Triggers:**
 - Push to `main` branch (only when `playbooks/roles/**`, `requirements.yml`, or workflow files change)
 - Pull requests to `main` branch (same path filters)
 - Manual dispatch
 
+**Jobs:**
+
+1. **Lint Job**: 
+   - Runs `yamllint` on all YAML files (lenient configuration)
+   - Runs `ansible-lint` on all roles (moderate profile)
+   - Continues on warnings to avoid blocking on style issues
+
+2. **Test Job**:
+   - Tests roles across Ubuntu 22.04 and 24.04 Docker images
+   - Uses strategic role ordering (simple roles first)
+   - Provides detailed progress and failure reporting
+   - Continues testing all roles even if some fail
+   - Comprehensive summary at the end
+
 **Features:**
 - **Path-based Triggers**: Only runs when relevant files change
 - **Multi-distro Matrix**: Tests across Ubuntu 24.04 and 22.04
-- **Concurrency Control**: Prevents multiple runs on the same ref
-- **Timeout Protection**: 45-minute timeout to prevent hanging jobs
-- **Galaxy Dependencies**: Automatic installation of Ansible Galaxy requirements
-- **Integrated Linting**: Runs yamllint and ansible-lint before tests
-- **Environment Variable Support**: Uses `MOLECULE_IMAGE` for dynamic distro selection
+- **Robust Error Handling**: Continues testing even when individual roles fail
+- **Progress Tracking**: Shows which role is being tested and overall progress
+- **Detailed Logging**: Environment info, Docker image selection, and test results
+- **Smart Role Ordering**: Tests simple roles first, complex ones last
+- **Backup/Restore**: Preserves original molecule configurations
 
-**Matrix Strategy:**
-- Ansible Core: 2.19.*
-- Distros: ubuntu:24.04, ubuntu:22.04
-- Fail-fast: Disabled (all combinations tested even if some fail)
+**Test Strategy:**
+- Ansible Core: Latest stable
+- Docker Images: geerlingguy/docker-ubuntu{2204,2404}-ansible
+- Timeout: 45 minutes total
+- Fail-fast: Disabled (comprehensive testing)
 
 ## Local Testing
 

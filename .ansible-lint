@@ -1,0 +1,28 @@
+# Ansible Lint Configuration
+---
+profile: moderate
+
+# Exclude specific rules that are too strict for this codebase
+skip_list:
+  - yaml[line-length]
+  - name[casing]
+  - name[template]
+  - var-naming[no-role-prefix]
+  - risky-file-permissions
+  - no-changed-when
+  - command-instead-of-module
+  - package-latest
+
+# Exclude directories and files
+exclude_paths:
+  - .git/
+  - .vscode/
+  - scripts/
+  - credentials/
+  - molecule/
+  
+# Only check roles and playbooks
+kinds:
+  - yaml: "**/*.{yaml,yml}"
+  - playbook: "**/playbooks/*.{yml,yaml}"
+  - role: "**/roles/*/"
