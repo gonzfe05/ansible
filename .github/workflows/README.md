@@ -15,7 +15,7 @@ Runs Molecule tests for all Ansible roles with multi-distro testing matrix.
 
 **Features:**
 - **Path-based Triggers**: Only runs when relevant files change
-- **Multi-distro Matrix**: Tests across Ubuntu 24.04, 22.04, and Debian 12
+- **Multi-distro Matrix**: Tests across Ubuntu 24.04 and 22.04
 - **Concurrency Control**: Prevents multiple runs on the same ref
 - **Timeout Protection**: 45-minute timeout to prevent hanging jobs
 - **Galaxy Dependencies**: Automatic installation of Ansible Galaxy requirements
@@ -24,7 +24,7 @@ Runs Molecule tests for all Ansible roles with multi-distro testing matrix.
 
 **Matrix Strategy:**
 - Ansible Core: 9.*
-- Distros: ubuntu:24.04, ubuntu:22.04, debian:12
+- Distros: ubuntu:24.04, ubuntu:22.04
 - Fail-fast: Disabled (all combinations tested even if some fail)
 
 ## Local Testing
@@ -56,7 +56,7 @@ The workflow installs the following Python packages:
 This implementation fully addresses the bug report requirements:
 
 ✅ **Path-based triggers**: Only runs when `playbooks/roles/**` or `requirements.yml` change
-✅ **Multi-distro matrix**: Tests across ubuntu:24.04, ubuntu:22.04, debian:12
+✅ **Multi-distro matrix**: Tests across ubuntu:24.04, ubuntu:22.04
 ✅ **Ansible version pinning**: Uses ansible-core=9.*
 ✅ **Integrated linting**: yamllint and ansible-lint run before tests
 ✅ **Concurrency control**: Prevents duplicate runs with timeout protection
