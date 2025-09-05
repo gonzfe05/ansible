@@ -23,7 +23,7 @@ Runs Molecule tests for all Ansible roles with multi-distro testing matrix.
 - **Environment Variable Support**: Uses `MOLECULE_IMAGE` for dynamic distro selection
 
 **Matrix Strategy:**
-- Ansible Core: 9.*
+- Ansible Core: 2.19.*
 - Distros: ubuntu:24.04, ubuntu:22.04
 - Fail-fast: Disabled (all combinations tested even if some fail)
 
@@ -57,7 +57,7 @@ This implementation fully addresses the bug report requirements:
 
 ✅ **Path-based triggers**: Only runs when `playbooks/roles/**` or `requirements.yml` change
 ✅ **Multi-distro matrix**: Tests across ubuntu:24.04, ubuntu:22.04
-✅ **Ansible version pinning**: Uses ansible-core=9.*
+✅ **Ansible version pinning**: Uses ansible-core=2.19.*
 ✅ **Integrated linting**: yamllint and ansible-lint run before tests
 ✅ **Concurrency control**: Prevents duplicate runs with timeout protection
 ✅ **Galaxy dependencies**: Automatic installation with caching

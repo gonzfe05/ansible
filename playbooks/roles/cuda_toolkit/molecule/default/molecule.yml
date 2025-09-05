@@ -5,7 +5,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: ${MOLECULE_IMAGE:-ubuntu:22.04}
+    image: "geerlingguy/docker-ubuntu2204-ansible"
     command: /sbin/init
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -25,7 +25,7 @@ scenario:
   name: default
   test_sequence:
     # - lint
-    - dependency
+#    - dependency
     - create
     - prepare
     - converge

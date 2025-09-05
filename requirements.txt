@@ -1,5 +1,5 @@
 # Molecule and testing dependencies for CI
-ansible-core==9.*
+ansible-core>=2.19.0
 molecule
 molecule-plugins[docker]
 ansible-lint
