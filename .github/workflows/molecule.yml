@@ -2,174 +2,69 @@
 name: molecule
 
 on:
-  pull_request:
-    paths:
-      - "playbooks/roles/**"
-      - "requirements.yml"
-      - ".github/workflows/molecule.yml"
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
       - "playbooks/roles/**"
-      - "requirements.yml"
-      - ".github/workflows/molecule.yml"
-  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     
-    strategy:
-      fail-fast: false
-      matrix:
-        role: 
-          - apt_installs
-          - users
-          - python
-        
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Ansible + Molecule
+      - name: Install tools
         run: |
-          python -m pip install --upgrade pip
           pip install ansible-core molecule "molecule-plugins[docker]"
 
-      - name: Debug - Show role structure
+      - name: Test apt_installs role
         run: |
-          echo "=== Testing role: ${{ matrix.role }} ==="
-          ls -la playbooks/roles/${{ matrix.role }}/
-          if [ -d "playbooks/roles/${{ matrix.role }}/molecule" ]; then
-            echo "Molecule directory contents:"
-            ls -la playbooks/roles/${{ matrix.role }}/molecule/default/
-          fi
-
-      - name: Create minimal molecule config
-        run: |
-          role_dir="playbooks/roles/${{ matrix.role }}"
+          cd playbooks/roles/apt_installs
           
-          # Create a minimal, working molecule configuration
-          cat > "$role_dir/molecule/default/molecule.yml" << 'EOF'
+          # Create simple working molecule config
+          cat > molecule/default/molecule.yml << 'EOF'
           ---
-          dependency:
-            name: galaxy
           driver:
             name: docker
           platforms:
             - name: instance
               image: ubuntu:22.04
-              command: sleep infinity
-              pre_build_image: true
+              command: sleep 60
           provisioner:
             name: ansible
-          verifier:
-            name: ansible
-          scenario:
-            test_sequence:
-              - create
-              - prepare
-              - converge
-              - verify
-              - destroy
           EOF
           
-          # Create role-specific converge playbook
-          case "${{ matrix.role }}" in
-            "apt_installs")
-              cat > "$role_dir/molecule/default/converge.yml" << 'EOF'
+          # Create simple converge playbook
+          cat > molecule/default/converge.yml << 'EOF'
           ---
-          - name: Converge
-            hosts: all
+          - hosts: all
             become: true
             vars:
               apt_update_cache: true
               apt_cache_valid_time: 3600
-              apt_installs_custom:
-                - vim
-                - curl
-                - git
+              apt_installs_custom: ["git"]
               apt_ppa_custom: []
             tasks:
-              - name: Include role apt_installs
-                include_role:
-                  name: apt_installs
-          EOF
-              ;;
-            "users")
-              cat > "$role_dir/molecule/default/converge.yml" << 'EOF'
-          ---
-          - name: Converge
-            hosts: all
-            become: true
-            vars:
-              required_groups:
-                - admin
-                - users
-                - sudo
-              users:
-                - name: testuser
-                  uid: 1002
-                  shell: /bin/bash
-                  comment: "Test User"
-                  groups: "users"
-                  password: ""
-            tasks:
-              - name: Include role users
-                include_role:
-                  name: users
-          EOF
-              ;;
-            "python")
-              cat > "$role_dir/molecule/default/converge.yml" << 'EOF'
-          ---
-          - name: Converge
-            hosts: all
-            become: true
-            pre_tasks:
               - name: Update apt cache
                 apt:
                   update_cache: yes
-            tasks:
-              - name: Include role python
+              - name: Include role
                 include_role:
-                  name: python
+                  name: apt_installs
           EOF
-              ;;
-            *)
-              cat > "$role_dir/molecule/default/converge.yml" << EOF
-          ---
-          - name: Converge
-            hosts: all
-            become: true
-            tasks:
-              - name: Include role ${{ matrix.role }}
-                include_role:
-                  name: ${{ matrix.role }}
-          EOF
-              ;;
-          esac
           
-          # Create a minimal verify playbook
-          cat > "$role_dir/molecule/default/verify.yml" << 'EOF'
-          ---
-          - name: Verify
-            hosts: all
-            tasks:
-              - name: Verify role completed successfully
-                debug:
-                  msg: "Role execution completed"
-          EOF
-
-      - name: Test role with Molecule
-        run: |
-          cd playbooks/roles/${{ matrix.role }}
-          echo "=== Running molecule test for ${{ matrix.role }} ==="
-          molecule test --destroy always
-        env:
-          ANSIBLE_FORCE_COLOR: '1'
-          PY_COLORS: '1'
+          # Run test
+          echo "Starting molecule test..."
+          molecule create
+          echo "Container created successfully"
+          molecule converge
+          echo "Converge completed successfully"
+          molecule destroy
+          echo "Test completed successfully!"

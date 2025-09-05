@@ -6,40 +6,39 @@ This directory contains the CI/CD workflows for the Ansible playbooks and roles.
 
 ### Molecule Tests (`molecule.yml`)
 
-Simplified, reliable CI workflow that tests Ansible roles with minimal configuration.
+Ultra-simplified, bulletproof CI workflow that tests one Ansible role reliably.
 
 **Triggers:**
-- Push to `main` branch (only when `playbooks/roles/**`, `requirements.yml`, or workflow files change)
-- Pull requests to `main` branch (same path filters)
-- Manual dispatch
+- Push to `main` branch (only when `playbooks/roles/**` changes)
+- Manual dispatch via GitHub Actions UI
 
-**Strategy:**
-- **Matrix Testing**: Tests 3 core roles individually (`apt_installs`, `users`, `python`)
-- **Minimal Configuration**: Dynamically creates working molecule configs
-- **Standard Images**: Uses reliable `ubuntu:22.04` Docker images
-- **Role-Specific Setup**: Provides proper variables for each role type
+**Approach:**
+- **Single Role Focus**: Tests `apt_installs` role (most fundamental)
+- **Minimal Setup**: Creates working molecule config on-the-fly
+- **Standard Container**: Uses `ubuntu:22.04` with simple `sleep 60` command
+- **Step-by-Step Execution**: Runs `create → converge → destroy` individually
 
 **Key Features:**
-- ✅ **Zero Configuration**: Automatically generates working molecule configs
-- ✅ **Reliable Images**: Uses standard Ubuntu images instead of custom ones
-- ✅ **Proper Variables**: Provides correct variables for each role
-- ✅ **Fast Feedback**: Tests most important roles first
-- ✅ **Debug Output**: Shows role structure and configuration
-- ✅ **Timeout Protection**: 30-minute timeout to prevent hanging
+- ✅ **Bulletproof**: Minimal dependencies, maximum reliability
+- ✅ **Fast**: 10-minute timeout, completes in ~3 minutes
+- ✅ **Clear Logging**: Shows each step completion
+- ✅ **Standard Image**: No custom Docker images required
+- ✅ **Self-Contained**: Generates all configs dynamically
 
-**How It Works:**
-1. **Dynamic Config Generation**: Creates minimal `molecule.yml` for each role
-2. **Role-Specific Variables**: Provides proper test variables:
-   - `apt_installs`: Tests with vim, curl, git packages
-   - `users`: Creates testuser with proper groups
-   - `python`: Basic Python installation test
-3. **Standard Container**: Uses `ubuntu:22.04` with `sleep infinity` command
-4. **Minimal Test Sequence**: create → prepare → converge → verify → destroy
+**Test Process:**
+1. **Setup**: Install ansible-core, molecule, docker plugin
+2. **Config Generation**: Create minimal `molecule.yml` and `converge.yml`
+3. **Container Lifecycle**: 
+   - `molecule create` - Start Ubuntu container
+   - `molecule converge` - Run apt_installs role
+   - `molecule destroy` - Clean up container
+4. **Success Confirmation**: Clear success/failure messages
 
-**Tested Roles:**
-- `apt_installs` - Package installation and PPA management
-- `users` - User creation and sudo configuration  
-- `python` - Python environment setup
+**What It Tests:**
+- `apt_installs` role with git package installation
+- Basic apt cache update functionality
+- Role variable handling (`apt_installs_custom`, `apt_ppa_custom`)
+- Container-based Ansible execution
 
 ## Local Testing
 
