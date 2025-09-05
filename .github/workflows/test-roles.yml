@@ -1,0 +1,161 @@
+name: Test All Ansible Roles
+
+on:
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'playbooks/roles/**'
+      - 'scripts/test_all_roles.sh'
+      - '.github/workflows/test-roles.yml'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'playbooks/roles/**'
+      - 'scripts/test_all_roles.sh'
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  PYTHON_VERSION: '3.11'  # Use stable Python version for CI
+
+jobs:
+  test-roles:
+    runs-on: ubuntu-latest
+    
+    services:
+      docker:
+        image: docker:24-dind
+        options: --privileged
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-venv
+        
+    - name: Create virtual environment
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+        
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install 'molecule[docker]' molecule-plugins[docker] ansible-lint
+        
+    - name: Install Ansible collections
+      run: |
+        ansible-galaxy collection install community.docker
+        ansible-galaxy collection install community.general
+        ansible-galaxy collection install ansible.posix
+        
+    - name: Set up Docker
+      run: |
+        # Start Docker daemon in background
+        sudo dockerd &
+        sleep 10
+        # Verify Docker is running
+        docker --version
+        docker info
+        
+    - name: Make test script executable
+      run: chmod +x scripts/test_all_roles.sh
+      
+    - name: Run role tests
+      run: |
+        # Set environment variables for molecule
+        export MOLECULE_NO_LOG=false
+        export ANSIBLE_FORCE_COLOR=1
+        
+        # Run the test script
+        ./scripts/test_all_roles.sh
+      env:
+        # Molecule environment variables
+        MOLECULE_VERBOSITY: 1
+        PY_COLORS: 1
+        ANSIBLE_FORCE_COLOR: 1
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: molecule-test-results
+        path: |
+          playbooks/roles/*/molecule/default/.molecule/
+          playbooks/roles/*/molecule/default/log/
+        retention-days: 7
+
+  # Job to check if all roles have molecule tests
+  validate-roles:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Check for molecule tests
+      run: |
+        echo "🔍 Checking for roles without molecule tests..."
+        
+        missing_tests=()
+        roles_dir="playbooks/roles"
+        
+        if [[ ! -d "$roles_dir" ]]; then
+          echo "❌ Roles directory not found: $roles_dir"
+          exit 1
+        fi
+        
+        # Check each role directory
+        for role_dir in "$roles_dir"/*; do
+          if [[ -d "$role_dir" ]]; then
+            role_name=$(basename "$role_dir")
+            
+            # Skip if it's not a directory or starts with .
+            if [[ "$role_name" == .* ]]; then
+              continue
+            fi
+            
+            # Check if molecule directory exists
+            if [[ ! -d "$role_dir/molecule" ]]; then
+              missing_tests+=("$role_name")
+            fi
+          fi
+        done
+        
+        # Report results
+        if [[ ${#missing_tests[@]} -eq 0 ]]; then
+          echo "✅ All roles have molecule tests!"
+        else
+          echo "⚠️  The following roles are missing molecule tests:"
+          for role in "${missing_tests[@]}"; do
+            echo "  - $role"
+          done
+          echo ""
+          echo "Please add molecule tests for these roles or exclude them if they don't need testing."
+          # Don't fail the build, just warn
+        fi
+        
+        # Count roles with tests
+        roles_with_tests=$(find "$roles_dir" -type d -name molecule | wc -l)
+        total_roles=$(find "$roles_dir" -maxdepth 1 -type d | grep -v "^$roles_dir$" | wc -l)
+        
+        echo "📊 Summary:"
+        echo "  Total roles: $total_roles"
+        echo "  Roles with tests: $roles_with_tests"
+        echo "  Coverage: $(( roles_with_tests * 100 / total_roles ))%"

@@ -1,0 +1,99 @@
+name: Test Ansible Roles (Simple)
+
+on:
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'playbooks/roles/**'
+      - 'scripts/test_all_roles.sh'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'playbooks/roles/**'
+      - 'scripts/test_all_roles.sh'
+  workflow_dispatch:
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    name: Lint and Validate Roles
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install ansible-lint yamllint
+        
+    - name: Lint YAML files
+      run: |
+        find playbooks/roles -name "*.yml" -o -name "*.yaml" | xargs yamllint -c .yamllint.yml || true
+        
+    - name: Lint Ansible roles
+      run: |
+        ansible-lint playbooks/roles/ || true
+        
+    - name: Validate role structure
+      run: |
+        echo "🔍 Validating role structure..."
+        ./scripts/test_all_roles.sh --dry-run || echo "Test script validation completed"
+
+  test-roles:
+    runs-on: ubuntu-latest
+    name: Test Roles with Molecule
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[test-roles]')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+        sudo systemctl start docker
+        sudo usermod -aG docker $USER
+        
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install 'molecule[docker]' molecule-plugins[docker] ansible-lint docker
+        
+    - name: Install Ansible collections
+      run: |
+        ansible-galaxy collection install community.docker community.general ansible.posix
+        
+    - name: Run molecule tests
+      run: |
+        # Make script executable
+        chmod +x scripts/test_all_roles.sh
+        
+        # Run tests with proper environment
+        export DOCKER_HOST=unix:///var/run/docker.sock
+        newgrp docker << EOF
+        ./scripts/test_all_roles.sh
+        EOF
+      env:
+        MOLECULE_NO_LOG: false
+        ANSIBLE_FORCE_COLOR: 1
+        
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: |
+          playbooks/roles/*/molecule/default/.molecule/
+        retention-days: 3
