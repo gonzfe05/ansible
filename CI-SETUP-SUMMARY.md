@@ -28,9 +28,10 @@
    ```
 
 2. **Molecule Workflow** will:
-   - Check if roles changed
+   - Check if roles or workflow files changed (multiple fallback methods)
    - If YES: Run molecule test on `apt_installs` role
-   - If NO: Show "Skipping molecule tests - no changes in playbooks/roles/"
+   - If NO: Show "Skipping molecule tests - no changes detected"
+   - If UNCERTAIN: Run tests anyway (safer approach)
 
 ### Expected PR Status:
 - ✅ **CI** - Always passes (basic validation)
