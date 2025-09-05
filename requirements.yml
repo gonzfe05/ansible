@@ -1,0 +1,15 @@
+---
+# Ansible Galaxy requirements for collections and roles
+# Add any required collections or roles here
+
+collections:
+  # Example: uncomment if you need specific collections
+  # - name: community.general
+  #   version: ">=6.0.0"
+  # - name: ansible.posix
+  #   version: ">=1.4.0"
+
+roles:
+  # Example: uncomment if you need specific roles
+  # - name: geerlingguy.docker
+  #   version: ">=4.0.0"

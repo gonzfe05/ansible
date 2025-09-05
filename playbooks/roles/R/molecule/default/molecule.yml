@@ -5,7 +5,10 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: geerlingguy/docker-ubuntu2004-ansible
+    image: ${MOLECULE_IMAGE:-ubuntu:22.04}
+    command: /sbin/init
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     become: yes
 provisioner:

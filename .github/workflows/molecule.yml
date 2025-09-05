@@ -1,115 +1,85 @@
 ---
-name: Molecule Tests
+name: molecule
 
 on:
-  push:
-    branches: [ main, master ]
   pull_request:
-    branches: [ main, master ]
+    paths:
+      - "playbooks/roles/**"
+      - "requirements.yml"
+      - ".github/workflows/molecule.yml"
+  push:
+    branches: [ main ]
+    paths:
+      - "playbooks/roles/**"
+      - "requirements.yml"
+      - ".github/workflows/molecule.yml"
   workflow_dispatch:
 
 jobs:
-  # Job to discover all roles with molecule tests
-  discover:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    timeout-minutes: 45
+    concurrency:
+      group: molecule-${{ github.ref }}
+      cancel-in-progress: true
 
-      - name: Discover roles with molecule tests
-        id: set-matrix
-        run: |
-          # Find all directories containing molecule tests
-          roles=$(find playbooks/roles -type d -name molecule -exec dirname {} \; | sort | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix={\"role\":$roles}" >> $GITHUB_OUTPUT
-          echo "Found roles with molecule tests:"
-          echo $roles | jq -r '.[]'
-
-  # Job to run molecule tests for each role
-  molecule:
-    runs-on: ubuntu-latest
-    needs: discover
-    if: needs.discover.outputs.matrix != '{"role":[]}'
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-    
+      matrix:
+        ansible: [ "9.*" ]
+        distro: [ "ubuntu:24.04", "ubuntu:22.04", "debian:12" ]
+
+    env:
+      PY_COLORS: '1'
+      ANSIBLE_FORCE_COLOR: '1'
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
+      - name: Install Ansible + Molecule
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ansible-core==${{ matrix.ansible }}" \
+                      molecule \
+                      "molecule-plugins[docker]" \
+                      ansible-lint yamllint
+
+      - name: Cache Galaxy & pip
+        uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          path: |
+            ~/.ansible/collections
+            ~/.ansible/roles
+            ~/.cache/pip
+          key: ${{ runner.os }}-galaxy-${{ hashFiles('requirements.yml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-galaxy-
 
-      - name: Install dependencies
+      - name: Install Galaxy deps (if any)
+        if: hashFiles('requirements.yml') != ''
+        run: ansible-galaxy install -r requirements.yml
+
+      - name: Lint
         run: |
-          python -m pip install --upgrade pip
-          pip install molecule[docker] ansible-lint yamllint docker
+          yamllint .
+          ansible-lint
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Run molecule test for ${{ matrix.role }}
-        run: |
-          cd "${{ matrix.role }}"
-          molecule test
+      - name: Run Molecule for all roles under playbooks/roles
         env:
-          MOLECULE_NO_LOG: false
-
-  # Job to run all tests using the existing script (as a backup/validation)
-  test-all:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
+          MOLECULE_IMAGE: ${{ matrix.distro }}
         run: |
-          python -m pip install --upgrade pip
-          pip install molecule[docker] ansible-lint yamllint docker
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Make test script executable
-        run: chmod +x scripts/test_all_roles.sh
-
-      - name: Run all molecule tests
-        run: ./scripts/test_all_roles.sh
-        env:
-          MOLECULE_NO_LOG: false
-
-  # Summary job to check if all tests passed
-  summary:
-    runs-on: ubuntu-latest
-    needs: [molecule, test-all]
-    if: always()
-    steps:
-      - name: Check test results
-        run: |
-          if [[ "${{ needs.molecule.result }}" == "success" && "${{ needs.test-all.result }}" == "success" ]]; then
-            echo "✅ All molecule tests passed!"
-            exit 0
-          else
-            echo "❌ Some molecule tests failed"
-            echo "Matrix tests result: ${{ needs.molecule.result }}"
-            echo "Test-all result: ${{ needs.test-all.result }}"
-            exit 1
-          fi
+          set -euo pipefail
+          shopt -s nullglob
+          # Loop roles and run default scenario if present
+          for role_dir in playbooks/roles/*; do
+            if [ -d "$role_dir/molecule" ]; then
+              echo "=== Running Molecule in $role_dir ==="
+              ( cd "$role_dir" && MOLECULE_IMAGE="${MOLECULE_IMAGE}" molecule test --destroy always )
+            else
+              echo "Skipping $role_dir (no molecule/ directory)"
+            fi
+          done
