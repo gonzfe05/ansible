@@ -56,10 +56,58 @@
       ansible.builtin.debug:
         var: public_key_content.stdout
 
+    - name: Check if SSH agent environment file exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh/ssh-agent-env"
+      register: ssh_agent_env_file
+
+    - name: Assert SSH agent environment file exists
+      ansible.builtin.assert:
+        that:
+          - ssh_agent_env_file.stat.exists
+        fail_msg: "SSH agent environment file not found"
+
+    - name: Check if SSH config file exists
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.ssh/config"
+      register: ssh_config_file
+
+    - name: Assert SSH config file exists
+      ansible.builtin.assert:
+        that:
+          - ssh_config_file.stat.exists
+        fail_msg: "SSH config file not found"
+
+    - name: Check SSH agent auto-start in .bashrc
+      ansible.builtin.shell: grep -q "SSH Agent auto-start" "{{ ansible_env.HOME }}/.bashrc"
+      register: bashrc_check
+      ignore_errors: yes
+
+    - name: Assert SSH agent auto-start is configured in .bashrc
+      ansible.builtin.assert:
+        that:
+          - bashrc_check.rc == 0
+        fail_msg: "SSH agent auto-start not configured in .bashrc"
+
+    - name: Source SSH agent environment and check if agent is running
+      ansible.builtin.shell: |
+        source {{ ansible_env.HOME }}/.ssh/ssh-agent-env
+        if [ -n "$SSH_AGENT_PID" ] && kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+          echo "agent_running"
+        else
+          echo "agent_not_running"
+        fi
+      register: agent_status
+
+    - name: Debug agent status
+      ansible.builtin.debug:
+        var: agent_status.stdout
+
     - name: Test SSH connection to GitHub
       # This WILL fail, github has no shell access
-      ansible.builtin.command:
-        cmd: "ssh -T git@github.com"
+      ansible.builtin.shell: |
+        source {{ ansible_env.HOME }}/.ssh/ssh-agent-env
+        ssh -T git@github.com
       register: ssh_test_output
       ignore_errors: yes
     

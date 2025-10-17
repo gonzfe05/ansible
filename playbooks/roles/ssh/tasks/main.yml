@@ -63,29 +63,41 @@
     state: present
     key: "{{ lookup('file', '{{ role_path }}/files/{{ source_key_pub }}') }}"
 
-- name: Start SSH agent
-  ansible.builtin.shell: "ssh-agent -s"
-  register: ssh_agent_output
+- name: Check if SSH agent is already running
+  ansible.builtin.shell: "pgrep -u {{ ansible_env.USER }} ssh-agent"
+  register: ssh_agent_check
+  ignore_errors: true
 
-- name: Extract SSH_AUTH_SOCK
+- name: Kill existing SSH agents if any
+  ansible.builtin.shell: "pkill -u {{ ansible_env.USER }} ssh-agent"
+  when: ssh_agent_check.rc == 0
+  ignore_errors: true
+
+- name: Start SSH agent and save environment to file
+  ansible.builtin.shell: |
+    ssh-agent -s > {{ ansible_env.HOME }}/.ssh/ssh-agent-env
+    chmod 600 {{ ansible_env.HOME }}/.ssh/ssh-agent-env
+  register: ssh_agent_start
+
+- name: Source SSH agent environment
+  ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && echo $SSH_AUTH_SOCK"
+  register: ssh_auth_sock_output
+
+- name: Set SSH_AUTH_SOCK fact
   set_fact:
-    ssh_auth_sock: "{{ ssh_agent_output.stdout | regex_search('SSH_AUTH_SOCK=([^;]+);', '\\1') | first }}"
+    ssh_auth_sock: "{{ ssh_auth_sock_output.stdout.strip() }}"
 
 - name: Debug SSH_AUTH_SOCK
   ansible.builtin.debug:
     var: ssh_auth_sock
 
 - name: Add SSH key to the agent
-  ansible.builtin.shell: "ssh-add {{ dest_key_private }}"
-  environment:
-    SSH_AUTH_SOCK: "{{ ssh_auth_sock }}"
+  ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && ssh-add {{ dest_key_private }}"
   register: ssh_add_output
   ignore_errors: true
 
 - name: Check if SSH key is added
-  ansible.builtin.shell: "ssh-add -L"
-  environment:
-    SSH_AUTH_SOCK: "{{ ssh_auth_sock }}"
+  ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && ssh-add -L"
   register: ssh_keys_list
   ignore_errors: true
 
@@ -101,9 +113,79 @@
   debug:
     msg: "{{ fingerprint.stdout }}"
 
+- name: Add SSH agent auto-start to .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    block: |
+      # SSH Agent auto-start
+      SSH_AGENT_ENV="{{ ansible_env.HOME }}/.ssh/ssh-agent-env"
+      if [ -f "$SSH_AGENT_ENV" ]; then
+          source "$SSH_AGENT_ENV" > /dev/null
+          # Check if the agent is still running
+          if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+              # Agent is not running, start a new one
+              ssh-agent -s > "$SSH_AGENT_ENV"
+              chmod 600 "$SSH_AGENT_ENV"
+              source "$SSH_AGENT_ENV" > /dev/null
+              ssh-add "{{ dest_key_private }}" 2>/dev/null
+          fi
+      else
+          # No agent environment file, start a new agent
+          ssh-agent -s > "$SSH_AGENT_ENV"
+          chmod 600 "$SSH_AGENT_ENV"
+          source "$SSH_AGENT_ENV" > /dev/null
+          ssh-add "{{ dest_key_private }}" 2>/dev/null
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - SSH AGENT"
+    create: yes
+
+- name: Check if .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+  register: zshrc_stat
+
+- name: Add SSH agent auto-start to .zshrc if it exists
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    block: |
+      # SSH Agent auto-start
+      SSH_AGENT_ENV="{{ ansible_env.HOME }}/.ssh/ssh-agent-env"
+      if [ -f "$SSH_AGENT_ENV" ]; then
+          source "$SSH_AGENT_ENV" > /dev/null
+          # Check if the agent is still running
+          if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+              # Agent is not running, start a new one
+              ssh-agent -s > "$SSH_AGENT_ENV"
+              chmod 600 "$SSH_AGENT_ENV"
+              source "$SSH_AGENT_ENV" > /dev/null
+              ssh-add "{{ dest_key_private }}" 2>/dev/null
+          fi
+      else
+          # No agent environment file, start a new agent
+          ssh-agent -s > "$SSH_AGENT_ENV"
+          chmod 600 "$SSH_AGENT_ENV"
+          source "$SSH_AGENT_ENV" > /dev/null
+          ssh-add "{{ dest_key_private }}" 2>/dev/null
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - SSH AGENT"
+    create: yes
+  when: zshrc_stat.stat.exists
+
+- name: Create SSH config file for GitHub
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.ssh/config"
+    content: |
+      # GitHub configuration
+      Host github.com
+          HostName github.com
+          User git
+          IdentityFile {{ dest_key_private }}
+          IdentitiesOnly yes
+          AddKeysToAgent yes
+    mode: '0600'
+
 - name: Ensure github.com is in the known hosts file
   ansible.builtin.known_hosts:
     name: github.com
     key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
-    path: ~/.ssh/known_hosts
-  become: true
+    path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
