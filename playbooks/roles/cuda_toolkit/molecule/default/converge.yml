@@ -3,7 +3,7 @@
   hosts: instance
   vars:
     gcc_version: "13"
-    gcc_version_check: "13.2.0"
+    gcc_version_check: "13.3.0"
     cuda_distro: "ubuntu{{ lookup('env', 'UBUNTU_MAJOR') | default('24', true) }}{{ lookup('env', 'UBUNTU_MINOR') | default('04', true) }}"
     cuda_version: "12.0"
     cuda_architecture: "x86_64"

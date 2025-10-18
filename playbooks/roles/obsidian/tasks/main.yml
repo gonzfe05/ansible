@@ -1,5 +1,12 @@
 ---
-- name: Install Obsidian runtime dependencies
+- name: Gather OS facts
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - 'distribution'
+
+- name: Install Obsidian runtime dependencies (Ubuntu 22.04 and earlier)
   apt:
     name:
       - libgtk-3-0
@@ -11,6 +18,21 @@
     state: present
     update_cache: yes
   become: yes
+  when: ansible_distribution_version is version('24.04', '<')
+
+- name: Install Obsidian runtime dependencies (Ubuntu 24.04 and later)
+  apt:
+    name:
+      - libgtk-3-0
+      - libnss3
+      - libxss1
+      - libasound2t64
+      - libatk-bridge2.0-0
+      - libx11-xcb1
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_distribution_version is version('24.04', '>=')
   
 - name: Download Obsidian .deb (static URL)
   ansible.builtin.get_url:
