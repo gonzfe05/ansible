@@ -81,6 +81,8 @@
 
 - name: Source SSH agent environment
   ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && echo $SSH_AUTH_SOCK"
+  args:
+    executable: /bin/bash
   register: ssh_auth_sock_output
 
 - name: Set SSH_AUTH_SOCK fact
@@ -93,11 +95,15 @@
 
 - name: Add SSH key to the agent
   ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && ssh-add {{ dest_key_private }}"
+  args:
+    executable: /bin/bash
   register: ssh_add_output
   ignore_errors: true
 
 - name: Check if SSH key is added
   ansible.builtin.shell: "source {{ ansible_env.HOME }}/.ssh/ssh-agent-env && ssh-add -L"
+  args:
+    executable: /bin/bash
   register: ssh_keys_list
   ignore_errors: true
 

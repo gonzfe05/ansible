@@ -37,7 +37,7 @@
     update: true
     accept_hostkey: true
     force: true
-    version: main
+    version: master
 
 - name: Cloning ExpenseTracker
   ansible.builtin.git:
@@ -67,4 +67,4 @@
     update: true
     accept_hostkey: true
     force: true
-    version: main
+    version: master

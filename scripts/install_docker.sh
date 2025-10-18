@@ -20,8 +20,14 @@ fi
 # Add the current user to the docker group:
 sudo usermod -aG docker "$USER" || exit 1
 
-# Notify user about logging out:
-echo "Please log out and back in to apply group changes."
+# Verify Docker installation with sudo (user won't have permissions until they log out/in)
+echo "Verifying Docker installation..."
+sudo docker run --rm hello-world > /dev/null 2>&1 || { echo "Docker installation verification failed."; exit 1; }
 
-# Run hello-world in a subshell to verify installation:
-(docker run hello-world) || { echo "Docker run failed."; exit 1; }
+echo "✅ Docker installed successfully!"
+echo ""
+echo "⚠️  IMPORTANT: To use Docker without sudo, apply group permissions:"
+echo "    Option 1: Log out and back in (recommended for permanent fix)"
+echo "    Option 2: Run 'newgrp docker' in your current terminal (temporary fix)"
+echo ""
+echo "After applying permissions, verify with: docker ps"

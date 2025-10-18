@@ -7,9 +7,10 @@
     - role: apt_installs
       vars:
         apt_update_cache: true
-        apt_cache_valid_time: 3600
+        apt_cache_valid_time: 0
         apt_ppa_custom: []
         apt_upgrade: false
         apt_installs_custom:
-          - gnupg
+          - gnupg2
+          - dirmngr
     - role: R

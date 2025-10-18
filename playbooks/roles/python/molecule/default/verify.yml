@@ -1,8 +1,8 @@
 ---
 - name: Verify python role
   hosts: instance
-  vars:
-    python_version: 3.12
+  vars_files:
+    - ../../vars/main.yml
   tasks:
     - name: Source the profile script
       shell: . /etc/profile.d/python.sh
@@ -12,8 +12,8 @@
       debug:
         msg: "PATH is {{ lookup('env', 'PATH') }}"
 
-    - name: Check if the Python package is installed
-      command: "python3 --version"
+    - name: Check if the custom Python package is installed
+      command: "/opt/python/{{ python_version }}/bin/python3 --version"
       changed_when: false
       failed_when: python_installed.rc != 0
       register: python_installed
@@ -30,4 +30,4 @@
     - name: Ensure the Python version is correct
       assert:
         that:
-          - "'Python {{ python_version }}' in python_installed.stdout"
+          - "'Python ' + python_version|string in python_installed.stdout"

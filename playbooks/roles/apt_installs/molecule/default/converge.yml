@@ -7,5 +7,7 @@
       - curl
       - git
       - unzip
+      - gnupg2
+      - dirmngr
   roles:
     - role: apt_installs

@@ -37,3 +37,51 @@
         that:
           - git_result.rc == 0
         fail_msg: "Git is not installed"
+
+    - name: Ensure unzip is installed
+      ansible.builtin.command:
+        cmd: unzip -v
+      register: unzip_result
+      ignore_errors: yes
+
+    - name: Assert unzip installation
+      ansible.builtin.assert:
+        that:
+          - unzip_result.rc == 0
+        fail_msg: "Unzip is not installed"
+
+    - name: Ensure gnupg2 is installed (check gpg)
+      ansible.builtin.command:
+        cmd: gpg --version
+      register: gnupg_result
+      ignore_errors: yes
+
+    - name: Assert gnupg2 installation
+      ansible.builtin.assert:
+        that:
+          - gnupg_result.rc == 0
+        fail_msg: "GnuPG is not installed"
+
+    - name: Ensure gpg-agent is working (part of gnupg2)
+      ansible.builtin.command:
+        cmd: gpg-agent --version
+      register: gpgagent_result
+      ignore_errors: yes
+
+    - name: Assert gpg-agent is working
+      ansible.builtin.assert:
+        that:
+          - gpgagent_result.rc == 0
+        fail_msg: "GPG-agent is not working"
+
+    - name: Ensure dirmngr is installed
+      ansible.builtin.command:
+        cmd: dirmngr --version
+      register: dirmngr_result
+      ignore_errors: yes
+
+    - name: Assert dirmngr installation
+      ansible.builtin.assert:
+        that:
+          - dirmngr_result.rc == 0
+        fail_msg: "Dirmngr is not installed"

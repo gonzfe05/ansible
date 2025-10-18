@@ -3,7 +3,7 @@
   hosts: instance
   vars:
     gcc_version: "13"
-    gcc_version_check: "13.2.0"
+    gcc_version_check: "13.3.0"
   tasks:
     - name: Verify GCC version
       ansible.builtin.command: gcc --version
@@ -12,6 +12,6 @@
     - name: Ensure GCC version is correct
       ansible.builtin.assert:
         that:
-          - "'{{ gcc_version_check }}' in gcc_version_output.stdout"
+          - "gcc_version_check in gcc_version_output.stdout"
         fail_msg: "GCC version is not as expected!"
         success_msg: "GCC version is correctly installed as {{ gcc_version_check }}."

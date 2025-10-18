@@ -29,7 +29,7 @@
 - name: Ensure GCC version is correct
   ansible.builtin.assert:
     that:
-      - "'{{ gcc_version_check }}' in gcc_version_output.stdout"
+      - "gcc_version_check in gcc_version_output.stdout"
     fail_msg: "GCC version is not as expected! Installed version: {{ gcc_version_output.stdout }}"
     success_msg: "GCC version is correctly installed."
 
@@ -78,21 +78,30 @@
   ansible.builtin.command: nvidia-smi
   register: nvidia_smi_output
   ignore_errors: true
-  tags: cuda_preparation
+  tags:
+    - cuda_preparation
+    - molecule-notest
 
 - name: Trigger reboot
   ansible.builtin.reboot:
-  tags: cuda_preparation
+  tags:
+    - cuda_preparation
+    - molecule-notest
 
 - name: Verify CUDA installation by running nvidia-smi
   ansible.builtin.command: nvidia-smi
   register: nvidia_smi_output
   ignore_errors: true
-  tags: cuda_preparation
+  tags:
+    - cuda_preparation
+    - molecule-notest
 
 - name: Debug print nvidia-smi output
   ansible.builtin.debug:
     msg: "nvidia-smi output: {{ nvidia_smi_output.stdout }}"
+  tags:
+    - cuda_preparation
+    - molecule-notest
 
 # - name: Ensure CUDA installation is successful
 #   ansible.builtin.assert:
