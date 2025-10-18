@@ -1,0 +1,14 @@
+version: "2"
+{% if ngrok_authtoken %}
+authtoken: {{ ngrok_authtoken }}
+{% endif %}
+
+tunnels:
+  ssh:
+    proto: tcp
+    addr: 22
+
+log_level: info
+log_format: logfmt
+log: {{ ansible_env.HOME }}/.config/ngrok/ngrok.log
+

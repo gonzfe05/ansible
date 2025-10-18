@@ -1,0 +1,6 @@
+---
+ngrok_config_dir: "{{ ansible_env.HOME }}/.config/ngrok"
+ngrok_config_file: "{{ ngrok_config_dir }}/ngrok.yml"
+ngrok_authtoken: ""  # Should be provided via vault or extra vars
+ngrok_version: "latest"
+
