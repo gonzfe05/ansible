@@ -5,7 +5,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: ubuntu:latest
+    image: ubuntu:${UBUNTU_MAJOR:-24}.${UBUNTU_MINOR:-04}
     privileged: true
     become: yes
     pre_build_image: false  # Ensures that the image is built with the required packages

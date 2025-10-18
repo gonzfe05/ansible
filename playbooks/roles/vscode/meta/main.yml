@@ -10,5 +10,11 @@ galaxy_info:
 
   galaxy_tags: ["vscode", "editor", "cli"]
 
-dependencies: []
+dependencies:
+  - role: apt_installs
+    vars:
+      apt_installs_custom:
+        - curl
+        - tar
+      apt_upgrade: no
 

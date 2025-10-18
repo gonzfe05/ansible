@@ -1,11 +1,4 @@
 ---
-- name: Ensure required packages are installed
-  ansible.builtin.package:
-    name:
-      - curl
-      - tar
-    state: present
-
 - name: Download VSCode server
   ansible.builtin.get_url:
     url: "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64"
