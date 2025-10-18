@@ -44,3 +44,26 @@
         that:
           - zsh_autosuggestions_check.stat.exists
         msg: "zsh-autosuggestions plugin is missing"
+
+    - name: Verify zsh-autoenv plugin directory exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autoenv"
+      register: zsh_autoenv_check
+
+    - name: Assert zsh-autoenv plugin is installed
+      ansible.builtin.assert:
+        that:
+          - zsh_autoenv_check.stat.exists
+        msg: "zsh-autoenv plugin is missing"
+
+    - name: Verify zsh-autoenv configuration in .zshrc
+      command: grep -q "zsh-autoenv/autoenv.zsh" "{{ ansible_env.HOME }}/.zshrc"
+      register: zshrc_autoenv_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert zsh-autoenv is configured in .zshrc
+      ansible.builtin.assert:
+        that:
+          - zshrc_autoenv_check.rc == 0
+        msg: "zsh-autoenv is not configured in .zshrc"

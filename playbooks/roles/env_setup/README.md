@@ -1,7 +1,17 @@
 Role Name
 =========
 
-Custom environment configs, mainly zsh as default shell
+Custom environment configs, mainly zsh as default shell with automatic .env file loading
+
+Features
+--------
+
+- Sets zsh as the default shell
+- Installs and configures Oh-My-Zsh
+- Installs zsh-autosuggestions plugin
+- Installs and configures zsh-autoenv plugin for automatic loading of .env files
+
+The zsh-autoenv plugin automatically sources `.env` files when you enter a directory and can optionally source `.env.leave` files when you exit. This eliminates the need to manually run `source .env` each time you enter a project directory.
 
 Requirements
 ------------
@@ -10,6 +20,7 @@ ansible
 molecule[docker]
 ansible-lint
 zsh
+git
 
 Dependencies
 ------------

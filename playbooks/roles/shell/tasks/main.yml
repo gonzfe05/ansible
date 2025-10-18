@@ -73,3 +73,35 @@
     repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
     dest: "{{ ansible_env.HOME }}/.oh-my-zsh/plugins/zsh-autosuggestions"
     version: master
+
+- name: Check if zsh-autoenv is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autoenv"
+  register: zsh_autoenv_stats
+
+- name: Install zsh-autoenv
+  when: not zsh_autoenv_stats.stat.exists
+  ansible.builtin.git:
+    repo: 'https://github.com/Tarrasch/zsh-autoenv.git'
+    dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autoenv"
+    version: master
+
+- name: Check if .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+  register: zshrc_stat
+
+- name: Configure zsh-autoenv in .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    block: |
+      # Enable zsh-autoenv plugin for automatic .env file loading
+      source {{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/zsh-autoenv/autoenv.zsh
+      
+      # zsh-autoenv settings
+      export AUTOENV_FILE_ENTER=.env
+      export AUTOENV_FILE_LEAVE=.env.leave
+      export AUTOENV_LOOK_UPWARDS=1
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - ZSH AUTOENV"
+    create: yes
+  when: zshrc_stat.stat.exists
