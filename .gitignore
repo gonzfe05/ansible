@@ -2,3 +2,6 @@
 personal/
 work/
 dev/
+
+# Molecule test cache
+.molecule_test_cache

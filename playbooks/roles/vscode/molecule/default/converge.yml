@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: instance
+  become: true
+  become_user: root
+  roles:
+    - role: vscode
+

@@ -1,0 +1,36 @@
+---
+- name: Verify vscode role
+  hosts: instance
+  tasks:
+    - name: Check if VSCode CLI binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/code
+      register: vscode_binary
+      failed_when: not vscode_binary.stat.exists
+
+    - name: Ensure VSCode CLI binary exists
+      ansible.builtin.assert:
+        that:
+          - vscode_binary.stat.exists
+          - vscode_binary.stat.executable
+        fail_msg: "VSCode CLI binary not found or not executable"
+        success_msg: "VSCode CLI binary found and is executable"
+
+    - name: Check VSCode CLI version
+      ansible.builtin.command: /usr/local/bin/code --version
+      register: vscode_version
+      changed_when: false
+      failed_when: vscode_version.rc != 0
+
+    - name: Display VSCode version
+      ansible.builtin.debug:
+        var: vscode_version.stdout_lines
+
+    - name: Ensure VSCode version command succeeded
+      ansible.builtin.assert:
+        that:
+          - vscode_version.rc == 0
+          - vscode_version.stdout | length > 0
+        fail_msg: "VSCode CLI version check failed"
+        success_msg: "VSCode CLI is working correctly"
+

@@ -5,7 +5,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: geerlingguy/docker-ubuntu2004-ansible
+    image: geerlingguy/docker-ubuntu${UBUNTU_MAJOR:-24}${UBUNTU_MINOR:-04}-ansible
     privileged: true
     # become: yes
 provisioner:

@@ -5,10 +5,9 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: ubuntu:${UBUNTU_MAJOR:-24}.${UBUNTU_MINOR:-04}
+    image: geerlingguy/docker-ubuntu${UBUNTU_MAJOR:-24}${UBUNTU_MINOR:-04}-ansible
     privileged: true
     become: yes
-    pre_build_image: false  # Ensures that the image is built with the required packages
 provisioner:
   name: ansible
   lint: |
@@ -16,7 +15,6 @@ provisioner:
     yamllint .
     ansible-lint
   playbooks:
-    prepare: prepare.yml  # Specify the prepare playbook
     converge: converge.yml
 scenario:
   name: default
@@ -30,3 +28,4 @@ scenario:
     - destroy
 verifier:
   name: ansible
+
