@@ -37,7 +37,7 @@ Example Playbook
             uid: 1001
             shell: /bin/bash
             comment: "Aleph User"
-            groups: "admin,sudo"
+            groups: "admin,sudo,docker"
             password: ""
     - role: ssh
       become: yes

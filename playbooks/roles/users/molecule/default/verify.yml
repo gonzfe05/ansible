@@ -31,6 +31,7 @@
         that:
           - "'admin' in aleph_groups.stdout.split()"
           - "'sudo' in aleph_groups.stdout.split()"
+          - "'docker' in aleph_groups.stdout.split()"
     
     - name: Check Aleph's sudo access
       ansible.builtin.command: sudo -lU aleph
