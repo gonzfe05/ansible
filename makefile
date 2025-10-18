@@ -16,3 +16,5 @@ test:
 	scripts/test_all_roles.sh
 run_local:
 	ansible-playbook playbooks/after_format.yaml --ask-vault-pass --ask-become-pass
+test:
+	scripts/test_all_roles.sh
