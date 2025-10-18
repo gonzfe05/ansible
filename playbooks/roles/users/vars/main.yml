@@ -4,10 +4,11 @@ users:
     uid: 1001
     shell: /bin/bash
     comment: "Aleph User"
-    groups: "admin,sudo"
+    groups: "admin,sudo,docker"
     password: ""
 
 required_groups:
   - admin
   - users
   - sudo
+  - docker
