@@ -1,0 +1,14 @@
+galaxy_info:
+  role_name: vscode
+  namespace: gonzfe05
+  author: Fernando Gonzalez
+  description: Install Visual Studio Code CLI
+
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: "2.1"
+
+  galaxy_tags: ["vscode", "editor", "cli"]
+
+dependencies: []
+

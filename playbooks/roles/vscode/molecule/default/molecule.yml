@@ -1,0 +1,31 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: geerlingguy/docker-ubuntu2004-ansible
+    privileged: true
+    become: yes
+provisioner:
+  name: ansible
+  lint: |
+    set -e
+    yamllint .
+    ansible-lint
+  playbooks:
+    converge: converge.yml
+scenario:
+  name: default
+  test_sequence:
+    # - lint
+    - dependency
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+verifier:
+  name: ansible
+
