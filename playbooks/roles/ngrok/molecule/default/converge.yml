@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: instance
+  become: true
+  become_user: root
+  roles:
+    - role: ngrok
+      vars:
+        ngrok_authtoken: "test_token_for_molecule_testing"
+

@@ -1,0 +1,91 @@
+---
+- name: Check if ngrok credentials file exists
+  ansible.builtin.stat:
+    path: "{{ role_path }}/files/ngrok_credentials.yml"
+  register: ngrok_creds_file
+  delegate_to: localhost
+  become: no
+
+- name: Read ngrok credentials from encrypted file
+  ansible.builtin.include_vars:
+    file: files/ngrok_credentials.yml
+    name: ngrok_creds
+  when: ngrok_creds_file.stat.exists
+  become: no
+
+- name: Set ngrok authtoken from credentials file
+  ansible.builtin.set_fact:
+    ngrok_authtoken: "{{ ngrok_creds.authtoken }}"
+  when: ngrok_creds_file.stat.exists and ngrok_creds.authtoken is defined
+  become: no
+
+- name: Download ngrok GPG key
+  ansible.builtin.get_url:
+    url: https://ngrok-agent.s3.amazonaws.com/ngrok.asc
+    dest: /tmp/ngrok.asc
+    mode: '0644'
+  become: yes
+
+- name: Dearmor and install ngrok GPG key
+  ansible.builtin.shell: |
+    gpg --dearmor < /tmp/ngrok.asc > /usr/share/keyrings/ngrok-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/ngrok-archive-keyring.gpg
+  become: yes
+
+- name: Add ngrok repository with signed-by
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/ngrok-archive-keyring.gpg] https://ngrok-agent.s3.amazonaws.com buster main"
+    state: present
+    filename: ngrok
+  become: yes
+
+- name: Remove temporary GPG key file
+  ansible.builtin.file:
+    path: /tmp/ngrok.asc
+    state: absent
+  become: yes
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: Install ngrok
+  ansible.builtin.apt:
+    name: ngrok
+    state: present
+  become: yes
+
+- name: Verify ngrok installation
+  ansible.builtin.command: ngrok version
+  register: ngrok_version_output
+  changed_when: false
+
+- name: Display ngrok version
+  ansible.builtin.debug:
+    msg: "Ngrok installed: {{ ngrok_version_output.stdout }}"
+
+- name: Ensure ngrok config directory exists
+  ansible.builtin.file:
+    path: "{{ ngrok_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create ngrok configuration file
+  ansible.builtin.template:
+    src: ngrok.yml.j2
+    dest: "{{ ngrok_config_file }}"
+    mode: '0600'
+
+- name: Verify ngrok configuration
+  ansible.builtin.stat:
+    path: "{{ ngrok_config_file }}"
+  register: ngrok_config_stat
+
+- name: Display configuration status
+  ansible.builtin.debug:
+    msg: "Ngrok configuration file created at {{ ngrok_config_file }}"
+  when: ngrok_config_stat.stat.exists
+

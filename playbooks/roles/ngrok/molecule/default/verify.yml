@@ -1,0 +1,149 @@
+---
+- name: Verify ngrok role
+  hosts: instance
+  tasks:
+    - name: Check if ngrok package is installed
+      ansible.builtin.command: dpkg -l ngrok
+      register: ngrok_package
+      changed_when: false
+      failed_when: ngrok_package.rc != 0
+
+    - name: Ensure ngrok package is installed
+      ansible.builtin.assert:
+        that:
+          - ngrok_package.rc == 0
+          - "'ngrok' in ngrok_package.stdout"
+        fail_msg: "Ngrok package is not installed"
+        success_msg: "Ngrok package is installed"
+
+    - name: List files installed by ngrok package
+      ansible.builtin.command: dpkg -L ngrok
+      register: ngrok_files
+      changed_when: false
+
+    - name: Display ngrok package files
+      ansible.builtin.debug:
+        var: ngrok_files.stdout_lines
+
+    - name: Find ngrok binary location
+      ansible.builtin.shell: which ngrok || find /usr -name ngrok 2>/dev/null || echo "not found"
+      register: ngrok_location
+      changed_when: false
+
+    - name: Display ngrok binary location
+      ansible.builtin.debug:
+        var: ngrok_location.stdout
+
+    - name: Check if ngrok binary exists
+      ansible.builtin.stat:
+        path: /usr/bin/ngrok
+      register: ngrok_binary
+      failed_when: false
+
+    - name: Ensure ngrok binary exists (if at /usr/bin/ngrok)
+      ansible.builtin.assert:
+        that:
+          - ngrok_binary.stat.exists
+          - ngrok_binary.stat.executable
+        fail_msg: "Ngrok binary not found at /usr/bin/ngrok - see debug output above for actual location"
+        success_msg: "Ngrok binary found and is executable"
+      when: ngrok_binary.stat.exists
+
+    - name: Check ngrok version (try which first)
+      ansible.builtin.shell: |
+        if command -v ngrok >/dev/null 2>&1; then
+          ngrok version
+        elif [ -f /usr/bin/ngrok ]; then
+          /usr/bin/ngrok version
+        else
+          echo "ngrok binary not found in PATH or /usr/bin"
+          exit 1
+        fi
+      register: ngrok_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display ngrok version
+      ansible.builtin.debug:
+        var: ngrok_version.stdout_lines
+
+    - name: Ensure ngrok version command succeeded
+      ansible.builtin.assert:
+        that:
+          - ngrok_version.rc == 0
+          - ngrok_version.stdout | length > 0
+        fail_msg: "Ngrok version check failed"
+        success_msg: "Ngrok is working correctly"
+
+    - name: Check if ngrok config directory exists
+      ansible.builtin.stat:
+        path: /root/.config/ngrok
+      register: ngrok_config_dir
+      failed_when: not ngrok_config_dir.stat.exists
+
+    - name: Ensure ngrok config directory exists
+      ansible.builtin.assert:
+        that:
+          - ngrok_config_dir.stat.exists
+          - ngrok_config_dir.stat.isdir
+        fail_msg: "Ngrok config directory not found"
+        success_msg: "Ngrok config directory exists"
+
+    - name: Check if ngrok config file exists
+      ansible.builtin.stat:
+        path: /root/.config/ngrok/ngrok.yml
+      register: ngrok_config_file
+      failed_when: not ngrok_config_file.stat.exists
+
+    - name: Ensure ngrok config file exists
+      ansible.builtin.assert:
+        that:
+          - ngrok_config_file.stat.exists
+          - ngrok_config_file.stat.isreg
+        fail_msg: "Ngrok config file not found"
+        success_msg: "Ngrok config file exists"
+
+    - name: Read ngrok config file
+      ansible.builtin.slurp:
+        src: /root/.config/ngrok/ngrok.yml
+      register: ngrok_config_content
+
+    - name: Parse ngrok config
+      ansible.builtin.set_fact:
+        ngrok_config: "{{ ngrok_config_content.content | b64decode }}"
+
+    - name: Display ngrok config
+      ansible.builtin.debug:
+        var: ngrok_config
+
+    - name: Verify ngrok config contains SSH tunnel
+      ansible.builtin.assert:
+        that:
+          - "'tunnels:' in ngrok_config"
+          - "'ssh:' in ngrok_config"
+          - "'proto: tcp' in ngrok_config"
+          - "'addr: 22' in ngrok_config"
+        fail_msg: "Ngrok config does not contain proper SSH tunnel configuration"
+        success_msg: "Ngrok config is properly configured for SSH tunneling"
+
+    - name: Test ngrok API connectivity and authentication
+      ansible.builtin.shell: |
+        if command -v ngrok >/dev/null 2>&1; then
+          timeout 15 ngrok diagnose
+        elif [ -f /usr/bin/ngrok ]; then
+          timeout 15 /usr/bin/ngrok diagnose
+        else
+          echo "ngrok binary not found"
+          exit 1
+        fi
+      register: ngrok_auth_test
+      changed_when: false
+      failed_when: ngrok_auth_test.rc != 0
+
+    - name: Verify ngrok authentication succeeded
+      ansible.builtin.assert:
+        that:
+          - ngrok_auth_test.rc == 0
+        fail_msg: "Ngrok authentication failed - authtoken may be invalid or ngrok service is unreachable"
+        success_msg: "Ngrok successfully authenticated with the service"
+

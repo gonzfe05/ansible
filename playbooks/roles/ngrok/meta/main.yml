@@ -1,0 +1,14 @@
+galaxy_info:
+  role_name: ngrok
+  namespace: gonzfe05
+  author: Fernando Gonzalez
+  description: Installs and configures ngrok for SSH tunneling
+
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: "2.1"
+
+  galaxy_tags: ["ngrok", "ssh", "tunnel"]
+
+dependencies: []
+
