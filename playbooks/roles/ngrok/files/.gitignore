@@ -1,5 +1,0 @@
-# Ignore unencrypted credentials file
-ngrok_credentials.yml
-# But keep the example file
-!ngrok_credentials.yml.example
-

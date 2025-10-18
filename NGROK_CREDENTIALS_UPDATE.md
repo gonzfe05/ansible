@@ -44,11 +44,12 @@ Added automatic detection and loading of encrypted credentials:
 authtoken: "your_ngrok_authtoken_here"
 ```
 
-### 3. Added `.gitignore`
+### 3. No `.gitignore` (Matches Project Pattern)
 
-**File:** `playbooks/roles/ngrok/files/.gitignore`
-
-Prevents accidental commit of unencrypted credentials while keeping the example file.
+Following the AWS role pattern, encrypted credentials ARE committed to the repo. No `.gitignore` is needed since:
+- Encrypted files are safe to commit (and should be committed)
+- The example file includes prominent warnings about encryption
+- This matches how the AWS role handles credentials
 
 ### 4. Updated Documentation
 
@@ -127,7 +128,8 @@ ansible-playbook playbooks/ngrok_setup.yaml \
 |---------|----------|---------------------|
 | Encrypted file in role | ✅ `files/aws_credentials.yml` | ✅ `files/ngrok_credentials.yml` |
 | Example file provided | ❌ | ✅ `files/ngrok_credentials.yml.example` |
-| `.gitignore` protection | ❌ | ✅ |
+| Encrypted file committed to repo | ✅ Yes | ✅ Yes |
+| `.gitignore` for credentials | ❌ No (encrypted safe to commit) | ❌ No (encrypted safe to commit) |
 | Auto-detection | ✅ | ✅ |
 | External vault support | ✅ | ✅ |
 | Direct variable support | ✅ | ✅ |
@@ -141,17 +143,17 @@ ansible-playbook playbooks/ngrok_setup.yaml \
 - `ISSUE_7_SOLUTION.md` - Updated usage examples
 
 ### Created:
-- `playbooks/roles/ngrok/files/ngrok_credentials.yml.example` - Example template
-- `playbooks/roles/ngrok/files/.gitignore` - Protects credentials
+- `playbooks/roles/ngrok/files/ngrok_credentials.yml.example` - Example template with warnings
 - `NGROK_CREDENTIALS_UPDATE.md` - This document
 
 ## Security Improvements
 
-1. ✅ **Example file** - Users can easily see expected format
-2. ✅ **`.gitignore`** - Prevents accidental commit of unencrypted credentials
-3. ✅ **Documentation** - Clear instructions on encryption
-4. ✅ **Multiple secure methods** - Users can choose what fits their workflow
-5. ✅ **Follows project patterns** - Consistent with AWS role
+1. ✅ **Example file with warnings** - Clear instructions to ALWAYS encrypt before committing
+2. ✅ **Encrypted credentials in repo** - Following AWS role pattern (safe and portable)
+3. ✅ **No .gitignore needed** - Encrypted files are safe to commit and should be committed
+4. ✅ **Documentation** - Clear instructions on encryption workflow
+5. ✅ **Multiple secure methods** - Users can choose what fits their workflow
+6. ✅ **Follows project patterns** - Consistent with AWS role
 
 ## Testing
 
