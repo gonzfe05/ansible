@@ -1,0 +1,65 @@
+---
+- name: Setup Remote SSH Server for VSCode/Cursor
+  hosts: localhost
+  roles:
+    - role: apt_installs
+      vars:
+        apt_installs_custom:
+          - openssh-server       # SSH server for remote access
+          - openssh-client       # SSH client utilities
+          - git                  # Required for VSCode/Cursor remote features
+          - curl                 # Download utilities
+          - wget                 # Download utilities
+          - build-essential      # C/C++ compiler for native extensions
+          - python3              # Python runtime for extensions
+          - python3-pip          # Python package manager
+          - sudo                 # Privilege escalation
+          - ca-certificates      # SSL certificates
+          - gnupg                # GPG for package verification
+          - lsb-release          # Distribution information
+      become: true
+      become_user: root
+      tags: ['packages']
+
+    - role: vscode
+      become: true
+      become_user: root
+      tags: ['vscode']
+
+  tasks:
+    - name: Ensure SSH service is enabled and started
+      ansible.builtin.systemd:
+        name: ssh
+        state: started
+        enabled: yes
+      become: true
+      become_user: root
+      tags: ['ssh']
+
+    - name: Configure SSH for better remote development experience
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        backup: yes
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication yes' }
+        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding yes' }
+        - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval 60' }
+        - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax 10' }
+      become: true
+      become_user: root
+      notify: restart ssh
+      tags: ['ssh']
+
+  handlers:
+    - name: restart ssh
+      ansible.builtin.systemd:
+        name: ssh
+        state: restarted
+      become: true
+      become_user: root
+
