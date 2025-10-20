@@ -77,7 +77,7 @@
       become: true
       become_user: aleph
       tags: ['obsidian']
-    - role: astro
+    - role: astro_cli
       become: true
       become_user: aleph
       tags: ['astro']
