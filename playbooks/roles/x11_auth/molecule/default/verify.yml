@@ -1,0 +1,24 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Check if profile script exists
+      ansible.builtin.stat:
+        path: /etc/profile.d/x11-auth-secondary-users.sh
+      register: profile_script
+
+    - name: Assert profile script was created
+      ansible.builtin.assert:
+        that:
+          - profile_script.stat.exists
+          - profile_script.stat.mode == '0644'
+        fail_msg: "Profile script not created or has wrong permissions"
+        success_msg: "Profile script created successfully"
+
+    - name: Check profile script contains expected user
+      ansible.builtin.command:
+        cmd: grep -q "testuser" /etc/profile.d/x11-auth-secondary-users.sh
+      register: grep_result
+      failed_when: grep_result.rc != 0
+      changed_when: false
+

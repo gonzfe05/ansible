@@ -108,3 +108,35 @@
     marker: "# {mark} ANSIBLE MANAGED BLOCK - ZSH AUTOENV"
     create: yes
   when: zshrc_stat.stat.exists
+
+- name: Configure Vim clipboard integration in .vimrc
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.vimrc"
+    block: |
+      " Enable system clipboard integration
+      " This allows yanking with 'y' to copy to system clipboard
+      " and pasting with 'p' to paste from system clipboard
+      set clipboard=unnamedplus
+      
+      " Ensure we're using vim-gtk or similar with +clipboard support
+      if has('clipboard')
+        " Explicit mappings for system clipboard
+        vnoremap <C-c> "+y
+        vnoremap <C-x> "+x
+        nnoremap <C-v> "+p
+        inoremap <C-v> <C-r>+
+      endif
+    marker: '" {mark} ANSIBLE MANAGED BLOCK - CLIPBOARD'
+    create: yes
+
+- name: Configure Neovim clipboard integration if init.vim exists
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_env.HOME }}/.config/nvim/init.vim"
+    block: |
+      " Enable system clipboard integration
+      set clipboard=unnamedplus
+      
+      " Neovim automatically detects clipboard providers (xclip, wl-clipboard, etc.)
+    marker: '" {mark} ANSIBLE MANAGED BLOCK - CLIPBOARD'
+    create: no
+  ignore_errors: true

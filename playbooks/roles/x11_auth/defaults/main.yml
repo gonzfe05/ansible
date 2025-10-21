@@ -1,0 +1,11 @@
+---
+# X11 authorization settings for secondary users
+x11_auth_users:
+  - aleph
+
+# Whether to add xhost command to graphical session startup
+x11_auth_persistent: true
+
+# Primary user who owns the graphical session (auto-detected if not set)
+x11_auth_primary_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) }}"
+

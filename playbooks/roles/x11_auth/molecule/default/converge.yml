@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    x11_auth_users:
+      - testuser
+  tasks:
+    - name: Create test user
+      ansible.builtin.user:
+        name: testuser
+        state: present
+      become: true
+
+    - name: Include x11_auth role
+      ansible.builtin.include_role:
+        name: x11_auth
+

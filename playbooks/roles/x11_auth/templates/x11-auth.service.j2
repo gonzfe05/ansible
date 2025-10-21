@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Grant X11 access to secondary users
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+Environment="DISPLAY={{ ansible_env.DISPLAY | default(':0') }}"
+{% for user in x11_auth_users %}
+ExecStart=/usr/bin/xhost +si:localuser:{{ user }}
+{% endfor %}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical-session.target
+

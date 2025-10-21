@@ -1,0 +1,89 @@
+---
+# =============================================================================
+# X11 Authorization for Secondary Users
+# =============================================================================
+# This role grants X server access to secondary users (like 'aleph') so they
+# can run GUI applications and use clipboard features when switching users.
+#
+# Fixes issue: https://github.com/gonzfe05/ansible/issues/3
+# =============================================================================
+
+- name: Detect the primary graphical session user
+  ansible.builtin.set_fact:
+    primary_user: "{{ x11_auth_primary_user }}"
+  when: x11_auth_primary_user is defined
+
+- name: Get the user running the playbook (fallback)
+  ansible.builtin.command: whoami
+  register: whoami_result
+  changed_when: false
+  when: primary_user is not defined
+
+- name: Set primary_user from whoami
+  ansible.builtin.set_fact:
+    primary_user: "{{ whoami_result.stdout }}"
+  when: primary_user is not defined
+
+- name: Debug primary user
+  ansible.builtin.debug:
+    msg: "Primary graphical session user: {{ primary_user }}"
+
+- name: Check if running in a graphical session
+  ansible.builtin.command: loginctl show-session $(loginctl | grep {{ primary_user }} | awk '{print $1}' | head -n1) -p Type
+  register: session_type
+  ignore_errors: true
+  changed_when: false
+
+- name: Create X11 authorization script for graphical session startup
+  ansible.builtin.template:
+    src: x11-auth-secondary-users.sh.j2
+    dest: /etc/profile.d/x11-auth-secondary-users.sh
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+  when: x11_auth_persistent
+
+- name: Create systemd user service for X11 authorization (alternative method)
+  ansible.builtin.template:
+    src: x11-auth.service.j2
+    dest: "/home/{{ primary_user }}/.config/systemd/user/x11-auth.service"
+    mode: '0644'
+    owner: "{{ primary_user }}"
+    group: "{{ primary_user }}"
+  become: true
+  when: x11_auth_persistent
+
+- name: Ensure systemd user directory exists
+  ansible.builtin.file:
+    path: "/home/{{ primary_user }}/.config/systemd/user"
+    state: directory
+    mode: '0755'
+    owner: "{{ primary_user }}"
+    group: "{{ primary_user }}"
+  become: true
+  when: x11_auth_persistent
+
+- name: Grant X server access to secondary users (immediate)
+  ansible.builtin.command: "xhost +si:localuser:{{ item }}"
+  loop: "{{ x11_auth_users }}"
+  environment:
+    DISPLAY: "{{ ansible_env.DISPLAY | default(':0') }}"
+    XAUTHORITY: "{{ ansible_env.XAUTHORITY | default('/home/' + primary_user + '/.Xauthority') }}"
+  become: true
+  become_user: "{{ primary_user }}"
+  when: ansible_env.DISPLAY is defined
+  ignore_errors: true
+  changed_when: false
+
+- name: Display X11 authorization status
+  ansible.builtin.debug:
+    msg: |
+      X11 authorization configured for users: {{ x11_auth_users | join(', ') }}
+      
+      If you're still experiencing issues:
+      1. Log out and log back in to your graphical session
+      2. Manually run: xhost +si:localuser:{{ x11_auth_users[0] }}
+      3. Verify with: echo $DISPLAY (should not be empty)
+      4. Test clipboard: echo test | xclip -selection clipboard
+
