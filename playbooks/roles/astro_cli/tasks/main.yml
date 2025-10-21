@@ -4,6 +4,7 @@
     path: /usr/local/bin/astro
     state: absent
   become: true
+  become_user: root
 
 - name: Download Astro CLI v0.29.0 for Linux AMD64
   get_url:
@@ -31,6 +32,7 @@
     remote_src: yes
     mode: '0755'
   become: true
+  become_user: root
 
 - name: Ensure astro is available and correct version
   command: astro version

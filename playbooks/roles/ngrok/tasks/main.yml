@@ -25,6 +25,7 @@
     dest: /tmp/ngrok.asc
     mode: '0644'
   become: yes
+  become_user: root
 
 - name: Dearmor and install ngrok GPG key
   ansible.builtin.shell: |
@@ -32,6 +33,7 @@
   args:
     creates: /usr/share/keyrings/ngrok-archive-keyring.gpg
   become: yes
+  become_user: root
 
 - name: Add ngrok repository with signed-by
   ansible.builtin.apt_repository:
@@ -39,24 +41,28 @@
     state: present
     filename: ngrok
   become: yes
+  become_user: root
 
 - name: Remove temporary GPG key file
   ansible.builtin.file:
     path: /tmp/ngrok.asc
     state: absent
   become: yes
+  become_user: root
 
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
     cache_valid_time: 3600
   become: yes
+  become_user: root
 
 - name: Install ngrok
   ansible.builtin.apt:
     name: ngrok
     state: present
   become: yes
+  become_user: root
 
 - name: Verify ngrok installation
   ansible.builtin.command: ngrok version

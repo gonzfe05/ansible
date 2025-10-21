@@ -1,2 +1,2 @@
-personal_folder: /personal
-work_folder: /work
+personal_folder: "{{ ansible_env.HOME }}/personal"
+work_folder: "{{ ansible_env.HOME }}/work"

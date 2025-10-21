@@ -1,4 +1,16 @@
 ---
+- name: Ensure personal folder exists
+  ansible.builtin.file:
+    path: "{{ personal_folder }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure work folder exists
+  ansible.builtin.file:
+    path: "{{ work_folder }}"
+    state: directory
+    mode: '0755'
+
 - name: Cloning .dotfiles
   ansible.builtin.git:
     repo: 'git@github.com:gonzfe05/.dotfiles.git'
