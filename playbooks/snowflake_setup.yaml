@@ -1,0 +1,10 @@
+---
+- name: Setup Snowflake credentials and DBT profiles
+  hosts: localhost
+  connection: local
+  roles:
+    - role: snowflake
+      become: true
+      become_user: aleph
+      tags: ['snowflake']
+

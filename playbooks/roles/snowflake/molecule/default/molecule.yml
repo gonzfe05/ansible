@@ -1,0 +1,25 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: geerlingguy/docker-ubuntu2004-ansible:latest
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_VAULT_PASSWORD_FILE: ${ANSIBLE_VAULT_PASSWORD_FILE}
+    ANSIBLE_ROLES_PATH: ${ANSIBLE_ROLES_PATH:-/home/aleph/personal/ansible/playbooks/roles}
+  inventory:
+    host_vars:
+      instance:
+        ansible_python_interpreter: /usr/bin/python3
+verifier:
+  name: ansible
+

@@ -1,0 +1,28 @@
+---
+- name: Prepare test environment
+  hosts: instance
+  become: true
+  become_user: root
+  tasks:
+    - name: Create test user aleph if it doesn't exist
+      ansible.builtin.user:
+        name: aleph
+        state: present
+        create_home: yes
+        shell: /bin/bash
+    
+    - name: Ensure zsh is installed
+      ansible.builtin.apt:
+        name: zsh
+        state: present
+        update_cache: yes
+
+- name: Converge
+  hosts: instance
+  become: true
+  become_user: root
+  roles:
+    - role: snowflake
+      become: true
+      become_user: aleph
+

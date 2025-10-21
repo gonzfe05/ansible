@@ -1,0 +1,103 @@
+---
+- name: Get current user
+  ansible.builtin.command: whoami
+  register: current_user
+  changed_when: false
+
+- name: Get home directory for current user
+  ansible.builtin.shell: "getent passwd {{ current_user.stdout }} | cut -d: -f6"
+  register: user_home
+  changed_when: false
+
+- name: Debug current user and home
+  debug:
+    msg: "Setting up Snowflake for user: {{ current_user.stdout }} (home: {{ user_home.stdout }})"
+
+- name: Create .dbt directory
+  file:
+    path: "{{ user_home.stdout }}/.dbt"
+    state: directory
+    mode: '0700'
+
+- name: Copy encrypted .env file
+  ansible.builtin.copy:
+    src: files/.env
+    dest: "{{ user_home.stdout }}/.env"
+    mode: '0600'
+    decrypt: yes
+
+- name: Copy encrypted rsa_key.p8
+  ansible.builtin.copy:
+    src: files/.dbt/rsa_key.p8
+    dest: "{{ user_home.stdout }}/.dbt/rsa_key.p8"
+    mode: '0600'
+    decrypt: yes
+
+- name: Copy encrypted profiles.yml
+  ansible.builtin.copy:
+    src: files/.dbt/profiles.yml
+    dest: "{{ user_home.stdout }}/.dbt/profiles.yml"
+    mode: '0600'
+    decrypt: yes
+
+- name: Copy encrypted .user.yml
+  ansible.builtin.copy:
+    src: files/.dbt/.user.yml
+    dest: "{{ user_home.stdout }}/.dbt/.user.yml"
+    mode: '0600'
+    decrypt: yes
+  ignore_errors: true
+
+- name: Ensure .zshrc exists
+  ansible.builtin.stat:
+    path: "{{ user_home.stdout }}/.zshrc"
+  register: zshrc_stat
+
+- name: Source .env file in .zshrc for Snowflake environment variables
+  ansible.builtin.blockinfile:
+    path: "{{ user_home.stdout }}/.zshrc"
+    block: |
+      # Load Snowflake environment variables from .env if it exists
+      if [ -f "$HOME/.env" ]; then
+        set -a
+        source "$HOME/.env"
+        set +a
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - SNOWFLAKE ENV"
+    create: yes
+  when: zshrc_stat.stat.exists
+
+- name: Source .env file in .bashrc for Snowflake environment variables (fallback)
+  ansible.builtin.blockinfile:
+    path: "{{ user_home.stdout }}/.bashrc"
+    block: |
+      # Load Snowflake environment variables from .env if it exists
+      if [ -f "$HOME/.env" ]; then
+        set -a
+        source "$HOME/.env"
+        set +a
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - SNOWFLAKE ENV"
+    create: yes
+
+- name: Verify .dbt directory structure
+  ansible.builtin.stat:
+    path: "{{ user_home.stdout }}/.dbt/rsa_key.p8"
+  register: rsa_key_stat
+
+- name: Assert RSA key exists
+  ansible.builtin.assert:
+    that:
+      - rsa_key_stat.stat.exists
+      - rsa_key_stat.stat.mode == '0600'
+    msg: "RSA key file is missing or has incorrect permissions"
+
+- name: Display success message
+  debug:
+    msg: |
+      Snowflake setup completed successfully for user: {{ current_user.stdout }}
+      - .env file copied to {{ user_home.stdout }}/.env
+      - RSA key copied to {{ user_home.stdout }}/.dbt/rsa_key.p8
+      - profiles.yml copied to {{ user_home.stdout }}/.dbt/profiles.yml
+      - Environment variables will be loaded on next shell session
+

@@ -1,0 +1,4 @@
+---
+# Default variables for snowflake role
+snowflake_setup_enabled: true
+
