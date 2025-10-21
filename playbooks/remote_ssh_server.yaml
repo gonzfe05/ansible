@@ -1,12 +1,34 @@
 ---
-- name: Setup Remote SSH Server for VSCode/Cursor
+# Remote SSH Server Setup with ngrok Tunneling
+# 
+# This playbook sets up a complete remote development server with:
+#   - SSH server for remote access (VSCode/Cursor)
+#   - ngrok tunnel for exposing SSH through firewalls/NAT
+#   - VSCode CLI for remote development
+#
+# The ssh role handles both:
+#   - SSH client configuration (outbound connections)
+#   - SSH server configuration (inbound connections)
+
+- name: Setup Remote SSH Server with ngrok Tunneling
   hosts: localhost
+  vars:
+    # Default user for SSH and ngrok setup (override with --extra-vars if needed)
+    setup_user: "{{ ansible_env.USER }}"
+    
+    # ngrok setup (optional - set to true to enable ngrok tunneling)
+    enable_ngrok: false
+    # Provide ngrok_authtoken via:
+    # 1. Command line: --extra-vars "ngrok_authtoken=YOUR_TOKEN enable_ngrok=true"
+    # 2. Environment: --extra-vars "ngrok_authtoken={{ lookup('env', 'NGROK_AUTHTOKEN') }} enable_ngrok=true"
+    # 3. Vault file: --extra-vars "@credentials/ngrok_vault.yml" --ask-vault-pass -e "enable_ngrok=true"
+    
   roles:
+    # Install required packages
     - role: apt_installs
       vars:
         apt_installs_custom:
           - openssh-server       # SSH server for remote access
-          - openssh-client       # SSH client utilities
           - git                  # Required for VSCode/Cursor remote features
           - curl                 # Download utilities
           - wget                 # Download utilities
@@ -21,45 +43,98 @@
       become_user: root
       tags: ['packages']
 
+    # Setup SSH server and client
+    - role: ssh
+      vars:
+        ssh_server_enabled: true                      # Enable SSH server
+        ssh_server_permit_root_login: "no"            # Security: disable root login
+        ssh_server_pubkey_authentication: "yes"       # Enable key-based auth
+        ssh_server_password_authentication: "yes"     # Allow passwords initially (disable after setting up keys)
+        ssh_server_x11_forwarding: "yes"              # Enable GUI forwarding
+        ssh_server_client_alive_interval: 60          # Keep connections alive
+        ssh_server_client_alive_count_max: 10         # Max keepalive attempts
+      become: yes
+      become_user: "{{ setup_user }}"
+      tags: ['ssh']
+
+    # Setup ngrok tunnel (optional)
+    - role: ngrok
+      vars:
+        ngrok_authtoken: "{{ ngrok_authtoken | default('') }}"
+      become: true
+      become_user: "{{ setup_user }}"
+      when: enable_ngrok | bool
+      tags: ['ngrok']
+
+    # Install VSCode CLI
     - role: vscode
       become: true
       become_user: root
       tags: ['vscode']
 
-  tasks:
-    - name: Ensure SSH service is enabled and started
-      ansible.builtin.systemd:
-        name: ssh
-        state: started
-        enabled: yes
-      become: true
-      become_user: root
-      tags: ['ssh']
+  post_tasks:
+    - name: Display setup summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Remote SSH Server Setup Complete!"
+          - "================================================================"
+          - ""
+          - "SSH Server Status:"
+          - "  - OpenSSH server installed and configured"
+          - "  - User: {{ setup_user }}"
+          - "  - SSH running on port 22"
+          - ""
+          - "Connect locally:"
+          - "  ssh {{ setup_user }}@localhost"
+          - ""
+          - "Connect remotely (if accessible):"
+          - "  1. Find your IP: hostname -I"
+          - "  2. Connect: ssh {{ setup_user }}@<your-ip>"
+          - ""
+          - "VSCode/Cursor Remote Development:"
+          - "  1. Install 'Remote - SSH' extension"
+          - "  2. Connect to: {{ setup_user }}@<your-ip>"
+          - ""
+          - "{% if enable_ngrok | bool %}ngrok Tunnel:"
+          - "  - ngrok configured for user {{ setup_user }}"
+          - "  - Start SSH tunnel: ngrok tcp 22"
+          - "  - Connect via ngrok: ssh {{ setup_user }}@<ngrok-url> -p <ngrok-port>"
+          - "{% else %}ngrok:"
+          - "  - Not enabled (use -e 'enable_ngrok=true ngrok_authtoken=YOUR_TOKEN'){% endif %}"
+          - ""
+          - "Security Recommendations:"
+          - "  1. Set up SSH keys: ssh-copy-id {{ setup_user }}@<ip>"
+          - "  2. Disable password auth after key setup"
+          - "  3. Configure firewall: sudo ufw allow ssh && sudo ufw enable"
+          - "  4. Monitor access: sudo journalctl -u ssh -f"
+          - "================================================================"
+      tags: ['always']
 
-    - name: Configure SSH for better remote development experience
-      ansible.builtin.lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        state: present
-        backup: yes
-      loop:
-        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
-        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
-        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication yes' }
-        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding yes' }
-        - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval 60' }
-        - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax 10' }
-      become: true
-      become_user: root
-      notify: restart ssh
-      tags: ['ssh']
-
-  handlers:
-    - name: restart ssh
-      ansible.builtin.systemd:
-        name: ssh
-        state: restarted
-      become: true
-      become_user: root
-
+# Usage Examples:
+#
+# 1. Basic setup (SSH server only):
+#    ansible-playbook playbooks/remote_ssh_server.yaml
+#
+# 2. With ngrok tunnel:
+#    ansible-playbook playbooks/remote_ssh_server.yaml \
+#      -e "enable_ngrok=true ngrok_authtoken=YOUR_TOKEN"
+#
+# 3. With custom user:
+#    ansible-playbook playbooks/remote_ssh_server.yaml \
+#      -e "setup_user=developer"
+#
+# 4. Full setup with ngrok:
+#    ansible-playbook playbooks/remote_ssh_server.yaml \
+#      -e "enable_ngrok=true setup_user=developer" \
+#      --extra-vars "@credentials/ngrok_vault.yml" --ask-vault-pass
+#
+# 5. Only install packages:
+#    ansible-playbook playbooks/remote_ssh_server.yaml --tags packages
+#
+# 6. Only setup SSH:
+#    ansible-playbook playbooks/remote_ssh_server.yaml --tags ssh
+#
+# 7. Only setup ngrok:
+#    ansible-playbook playbooks/remote_ssh_server.yaml --tags ngrok \
+#      -e "enable_ngrok=true ngrok_authtoken=YOUR_TOKEN"

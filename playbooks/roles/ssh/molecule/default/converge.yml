@@ -7,7 +7,8 @@
     - role: apt_installs
       vars:
         apt_installs_custom:
-          - openssh-client
+          - openssh-client    # SSH client for outbound connections
+          - openssh-server    # SSH server for inbound connections (testing server feature)
     - role: users
       vars:
         users:
@@ -18,6 +19,8 @@
             groups: "admin,sudo,docker"
             password: ""
     - role: ssh
+      vars:
+        ssh_server_enabled: true  # Test both client and server functionality
       become: yes
       become_user: aleph
       become_password: ""

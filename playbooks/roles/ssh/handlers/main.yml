@@ -1,0 +1,11 @@
+---
+- name: restart ssh
+  ansible.builtin.systemd:
+    name: ssh
+    state: restarted
+  become: true
+  become_user: root
+  failed_when: false  # Ignore failures in Docker containers (no systemd)
+  tags:
+    - molecule-notest
+

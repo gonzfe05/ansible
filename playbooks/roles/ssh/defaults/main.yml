@@ -1,0 +1,12 @@
+---
+# SSH server configuration (configurable per playbook)
+ssh_server_enabled: true  # Set to true to configure SSH server
+
+# SSH server daemon configuration options
+ssh_server_permit_root_login: "no"
+ssh_server_pubkey_authentication: "yes"
+ssh_server_password_authentication: "yes"
+ssh_server_x11_forwarding: "yes"
+ssh_server_client_alive_interval: 60
+ssh_server_client_alive_count_max: 10
+

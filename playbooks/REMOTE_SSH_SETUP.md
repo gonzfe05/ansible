@@ -1,5 +1,9 @@
 # Remote SSH Server Setup for VSCode/Cursor
 
+> **✨ NEW: The SSH role now includes server functionality!**  
+> We recommend using `remote_ssh_server_v2.yaml` which leverages the enhanced SSH role.  
+> This guide covers both the original manual setup and the new role-based approach.
+
 This playbook sets up a machine for remote SSH access with VSCode or Cursor IDE.
 
 ## What It Does
@@ -34,11 +38,35 @@ This playbook installs only the essential components needed to use your machine 
 
 ## Usage
 
-### Run the entire playbook:
+### Recommended: Remote SSH Server with Enhanced Features
 
+The playbook now uses the enhanced SSH role and optionally includes ngrok tunneling:
+
+**Basic SSH Server Setup:**
 ```bash
 ansible-playbook playbooks/remote_ssh_server.yaml
 ```
+
+**With ngrok Tunneling (for NAT/firewall bypass):**
+```bash
+ansible-playbook playbooks/remote_ssh_server.yaml \
+  -e "enable_ngrok=true ngrok_authtoken=YOUR_TOKEN"
+```
+
+**With Custom User:**
+```bash
+ansible-playbook playbooks/remote_ssh_server.yaml \
+  -e "setup_user=developer"
+```
+
+Benefits:
+- ✅ Role-based configuration (more maintainable)
+- ✅ Automatic SSH server installation and configuration
+- ✅ Configurable security settings via variables
+- ✅ Includes both client and server setup
+- ✅ Optional ngrok tunneling for remote access through NAT
+- ✅ Better testing support with molecule
+- ✅ Consistent with other Ansible roles
 
 ### Run specific parts using tags:
 
@@ -52,6 +80,38 @@ ansible-playbook playbooks/remote_ssh_server.yaml --tags ssh
 # Install only VSCode CLI
 ansible-playbook playbooks/remote_ssh_server.yaml --tags vscode
 ```
+
+## ngrok Tunneling (Optional)
+
+If you enabled ngrok tunneling, you can access your SSH server from anywhere:
+
+### Starting the ngrok Tunnel
+
+```bash
+ngrok tcp 22
+```
+
+This will output something like:
+```
+Forwarding  tcp://0.tcp.ngrok.io:12345 -> localhost:22
+```
+
+### Connecting via ngrok
+
+```bash
+ssh username@0.tcp.ngrok.io -p 12345
+```
+
+### Use Cases for ngrok
+- 🏠 Access your home machine from work
+- 🔒 Bypass restrictive firewalls/NAT
+- 🌐 No need for port forwarding or dynamic DNS
+- 🚀 Quick remote access setup
+
+### ngrok Tips
+- Get a free account at https://ngrok.com for longer session times
+- Use ngrok config for persistent tunnel settings
+- Consider ngrok's paid plans for custom domains and reserved addresses
 
 ## After Running the Playbook
 
@@ -175,20 +235,45 @@ This playbook leverages the following existing roles:
 - **`apt_installs`** - Installs all required packages (openssh-server, git, build-essential, etc.)
 - **`vscode`** - Installs the VSCode CLI for remote development
 
-### Why not use the `ssh` role?
+### ✨ NEW: The `ssh` Role Now Supports Server Configuration!
 
-The existing `ssh` role is designed for **client-side** SSH configuration:
+The SSH role has been enhanced to support both client and server functionality:
+
+**Client-side (Always Enabled):**
 - Copies SSH private/public keys
 - Sets up SSH agent
 - Configures SSH client config for GitHub
 - Client-to-server key management
 
-This playbook focuses on **server-side** SSH setup:
+**Server-side (Optional - New!):**
 - Installs and starts openssh-server
 - Configures the SSH daemon (`/etc/ssh/sshd_config`)
 - Enables remote connections to this machine
+- Configurable security settings
 
-If you need to set up SSH keys for the user on this machine to connect to other services (like GitHub), you can add the `ssh` role separately.
+To enable server features, simply set `ssh_server_enabled: true` when using the role.
+
+**Migration Example:**
+
+Old way (manual):
+```yaml
+- role: apt_installs
+  vars:
+    apt_installs_custom: [openssh-server, ...]
+tasks:
+  - name: Configure SSH...
+    # manual configuration
+```
+
+New way (using the ssh role):
+```yaml
+- role: ssh
+  vars:
+    ssh_server_enabled: true
+    ssh_server_password_authentication: "no"
+```
+
+See `playbooks/remote_ssh_server_v2.yaml` for a complete example.
 
 ## Related Roles
 

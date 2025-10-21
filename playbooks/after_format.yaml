@@ -5,7 +5,8 @@
     - role: apt_installs
       vars:
         apt_installs_custom:
-          - openssh-client
+          - openssh-client       # SSH client for outbound connections
+          - openssh-server       # SSH server for inbound connections (if ssh_server_enabled)
           - git
           - zsh
           - tmux
@@ -34,6 +35,8 @@
       become_user: root
       tags: ['core']
     - role: ssh
+      # vars:
+      #   ssh_server_enabled: true  # Uncomment to enable SSH server for remote access (VSCode/Cursor)
       become: true
       become_user: aleph
       tags: ['core']

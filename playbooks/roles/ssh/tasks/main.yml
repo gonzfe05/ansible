@@ -1,4 +1,8 @@
 ---
+# =============================================================================
+# SSH CLIENT CONFIGURATION (Outbound SSH connections)
+# =============================================================================
+
 - name: Gather facts about the user
   ansible.builtin.setup:
     filter: ansible_env
@@ -24,7 +28,7 @@
   ansible.builtin.copy:
     src: "{{ role_path }}/files/{{ source_key_pub }}"
     dest: "{{ dest_key_pub }}"
-    mode: '0600'
+    mode: '0644'
     decrypt: yes
 
 - name: Verify SSH private key was copied
@@ -195,3 +199,85 @@
     name: github.com
     key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
     path: "{{ ansible_env.HOME }}/.ssh/known_hosts"
+
+# =============================================================================
+# SSH SERVER CONFIGURATION (Inbound SSH connections)
+# =============================================================================
+# NOTE: openssh-server must be installed via the apt_installs role
+# Example:
+#   - role: apt_installs
+#     vars:
+#       apt_installs_custom: [openssh-server]
+
+- name: Check if openssh-server is installed
+  ansible.builtin.command: dpkg -l openssh-server
+  register: openssh_check
+  failed_when: false
+  changed_when: false
+  become: true
+  become_user: root
+  when: ssh_server_enabled | bool
+  tags: ['ssh-server']
+
+- name: Fail if openssh-server is not installed
+  ansible.builtin.fail:
+    msg: |
+      openssh-server is not installed!
+      Please install it using the apt_installs role:
+        - role: apt_installs
+          vars:
+            apt_installs_custom: [openssh-server]
+          become: true
+          become_user: root
+  when: 
+    - ssh_server_enabled | bool
+    - openssh_check.rc != 0
+  tags: ['ssh-server']
+
+- name: Ensure SSH service is enabled and started
+  ansible.builtin.systemd:
+    name: ssh
+    state: started
+    enabled: yes
+  become: true
+  become_user: root
+  when: ssh_server_enabled | bool
+  tags: 
+    - ssh-server
+    - service
+    - molecule-notest  # Skip in Docker containers (no systemd)
+
+- name: Configure SSH server for remote development
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backup: no  # Backup disabled to avoid permission issues in Docker containers
+  loop:
+    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin {{ ssh_server_permit_root_login }}' }
+    - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication {{ ssh_server_pubkey_authentication }}' }
+    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication {{ ssh_server_password_authentication }}' }
+    - { regexp: '^#?X11Forwarding', line: 'X11Forwarding {{ ssh_server_x11_forwarding }}' }
+    - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval {{ ssh_server_client_alive_interval }}' }
+    - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax {{ ssh_server_client_alive_count_max }}' }
+  become: true
+  become_user: root
+  when: ssh_server_enabled | bool
+  notify: restart ssh
+  tags: ['ssh-server', 'config']
+
+- name: Display SSH server status message
+  ansible.builtin.debug:
+    msg:
+      - "SSH Server has been configured successfully!"
+      - "You can now connect to this machine via SSH using:"
+      - "  ssh {{ ansible_env.USER }}@<this-machine-ip>"
+      - ""
+      - "To find this machine's IP address, run: ip addr show or hostname -I"
+      - ""
+      - "For VSCode/Cursor remote development:"
+      - "  1. Install 'Remote - SSH' extension"
+      - "  2. Connect to: {{ ansible_env.USER }}@<this-machine-ip>"
+  when: ssh_server_enabled | bool
+  tags: ['ssh-server']
