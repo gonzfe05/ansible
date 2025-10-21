@@ -67,6 +67,10 @@
       become: true
       become_user: aleph
       tags: ['aws']
+    - role: snowflake
+      become: true
+      become_user: aleph
+      tags: ['snowflake']
     - role: repos
       become: true
       become_user: aleph

@@ -1,0 +1,68 @@
+---
+- name: Verify
+  hosts: instance
+  gather_facts: false
+  become: true
+  become_user: aleph
+  tasks:
+    - name: Get current user
+      ansible.builtin.command: whoami
+      register: current_user
+      changed_when: false
+
+    - name: Get home directory for current user
+      ansible.builtin.shell: "getent passwd {{ current_user.stdout }} | cut -d: -f6"
+      register: user_home
+      changed_when: false
+
+    - name: Check if .dbt directory exists
+      ansible.builtin.stat:
+        path: "{{ user_home.stdout }}/.dbt"
+      register: dbt_dir
+
+    - name: Assert .dbt directory exists
+      ansible.builtin.assert:
+        that:
+          - dbt_dir.stat.exists
+          - dbt_dir.stat.isdir
+        fail_msg: ".dbt directory does not exist"
+        success_msg: ".dbt directory exists"
+
+    - name: Check if RSA key exists
+      ansible.builtin.stat:
+        path: "{{ user_home.stdout }}/.dbt/rsa_key.p8"
+      register: rsa_key
+
+    - name: Assert RSA key exists with correct permissions
+      ansible.builtin.assert:
+        that:
+          - rsa_key.stat.exists
+          - rsa_key.stat.mode == '0600'
+        fail_msg: "RSA key does not exist or has incorrect permissions"
+        success_msg: "RSA key exists with correct permissions"
+
+    - name: Check if profiles.yml exists
+      ansible.builtin.stat:
+        path: "{{ user_home.stdout }}/.dbt/profiles.yml"
+      register: profiles
+
+    - name: Assert profiles.yml exists
+      ansible.builtin.assert:
+        that:
+          - profiles.stat.exists
+        fail_msg: "profiles.yml does not exist"
+        success_msg: "profiles.yml exists"
+
+    - name: Check if .env file exists
+      ansible.builtin.stat:
+        path: "{{ user_home.stdout }}/.env"
+      register: env_file
+
+    - name: Assert .env file exists with correct permissions
+      ansible.builtin.assert:
+        that:
+          - env_file.stat.exists
+          - env_file.stat.mode == '0600'
+        fail_msg: ".env file does not exist or has incorrect permissions"
+        success_msg: ".env file exists with correct permissions"
+
