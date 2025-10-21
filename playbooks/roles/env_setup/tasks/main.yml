@@ -61,6 +61,9 @@
       ansible.builtin.command: "{{ ansible_env.HOME }}/.oh-my-installer"
       register: oh_my_zsh_install
       changed_when: oh_my_zsh_install.rc == 0
+      environment:
+        RUNZSH: 'no'
+        CHSH: 'no'
 
 - name: Check if zsh-autosuggestions is installed
   ansible.builtin.stat:
