@@ -14,8 +14,9 @@
           - fzf
           - zip
           - vim
-          - xclip
-          - vim-gtk3
+          - xclip                # Clipboard support for X11
+          - wl-clipboard         # Clipboard support for Wayland
+          - vim-gtk3             # Vim with clipboard support
           - sudo
             #- clang-12
           - build-essential
@@ -33,6 +34,12 @@
             password: ""
       become: true
       become_user: root
+      tags: ['core']
+    - role: x11_auth
+      vars:
+        x11_auth_users:
+          - aleph
+      become: true
       tags: ['core']
     - role: ssh
       # vars:

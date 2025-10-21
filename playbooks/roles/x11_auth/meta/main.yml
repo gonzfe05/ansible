@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  author: gonzfe05
+  description: Grant X11 server access to secondary users for GUI apps and clipboard
+  company: Personal
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+  galaxy_tags:
+    - x11
+    - xorg
+    - clipboard
+    - gui
+    - display
+
+dependencies: []
+

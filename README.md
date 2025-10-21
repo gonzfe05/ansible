@@ -212,8 +212,28 @@ Each role has its own README:
 - [REMOTE_SSH_SETUP.md](playbooks/REMOTE_SSH_SETUP.md) - SSH server setup guide
 - [ZSH_AUTOENV_GUIDE.md](ZSH_AUTOENV_GUIDE.md) - Zsh autoenv guide
 - [SSH_AGENT_FIX_SUMMARY.md](SSH_AGENT_FIX_SUMMARY.md) - SSH agent troubleshooting
+- [ISSUE_3_X11_CLIPBOARD_FIX.md](ISSUE_3_X11_CLIPBOARD_FIX.md) - X11 authorization and clipboard fix
 
 ## Troubleshooting
+
+### X11 Authorization and Clipboard Issues
+
+**Problem**: When switching to the `aleph` user, clipboard operations fail or GUI apps won't launch.
+
+**Symptoms**:
+- Vim clipboard (`v` + `y`) doesn't copy to system clipboard
+- `xclip` fails with "Authorization required" or "Can't open display"
+- VSCode won't launch with "Missing X server" error
+
+**Solution**: This is now automatically fixed by the `x11_auth` role in the playbook.
+
+**Manual fix** (if needed immediately):
+```bash
+# As the graphical session owner (not aleph)
+xhost +si:localuser:aleph
+```
+
+See [ISSUE_3_X11_CLIPBOARD_FIX.md](ISSUE_3_X11_CLIPBOARD_FIX.md) for complete details.
 
 ### SSH Role Issues
 
