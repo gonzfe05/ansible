@@ -5,9 +5,11 @@
 
 # Only run in graphical sessions with DISPLAY set
 if [ -n "$DISPLAY" ]; then
-    # Grant access to secondary users
+    # Grant access to secondary users (only if not already authorized)
 {% for user in x11_auth_users %}
-    xhost +si:localuser:{{ user }} 2>/dev/null
+    if ! xhost | grep -q "localuser:{{ user }}"; then
+        xhost +si:localuser:{{ user }} >/dev/null 2>&1
+    fi
 {% endfor %}
 fi
 
