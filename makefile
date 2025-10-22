@@ -1,5 +1,13 @@
 .PHONY: run test clean-test-cache test-vm test-vm-keep test-vm-core test-vm-syntax
 
+# Check that we're not running as the 'aleph' user (created by this repo)
+CURRENT_USER := $(shell whoami)
+ifeq ($(CURRENT_USER),aleph)
+$(error ❌ ERROR: The 'aleph' user cannot run this Ansible repository.\
+\nThe 'aleph' user is created and managed by this repository (via the 'users' role).\
+\nRunning as 'aleph' could cause conflicts or permission issues.\
+\nPlease run as your actual system user (e.g., 'fer') instead.)
+endif
 
 # Ubuntu version configuration
 ubuntu_major ?= 24
