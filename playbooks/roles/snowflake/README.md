@@ -5,10 +5,16 @@ This Ansible role sets up Snowflake credentials and DBT profiles on a target sys
 ## Description
 
 The Snowflake role handles:
-- Copying encrypted `.env` file with Snowflake environment variables
+- Adding Snowflake environment variables to `~/.env` (preserves existing variables)
 - Setting up the RSA private key for Snowflake authentication in `~/.dbt/rsa_key.p8`
 - Configuring DBT profiles in `~/.dbt/profiles.yml`
 - Automatically sourcing environment variables in shell configuration files
+
+**Note**: This role uses `blockinfile` to manage Snowflake credentials in `~/.env`, which means:
+- ✅ Existing environment variables in `~/.env` are preserved
+- ✅ Running the role multiple times is idempotent (no duplication)
+- ✅ Updating Snowflake variables automatically updates the managed block
+- See [ENV_FILE_HANDLING.md](ENV_FILE_HANDLING.md) for detailed information
 
 ## Requirements
 

@@ -19,12 +19,19 @@
     state: directory
     mode: '0700'
 
-- name: Copy encrypted .env file
-  ansible.builtin.copy:
-    src: files/.env
-    dest: "{{ user_home.stdout }}/.env"
+- name: Read encrypted .env file content
+  ansible.builtin.set_fact:
+    snowflake_env_content: "{{ lookup('file', 'files/.env') }}"
+  no_log: true
+
+- name: Add Snowflake environment variables to .env file
+  ansible.builtin.blockinfile:
+    path: "{{ user_home.stdout }}/.env"
+    block: "{{ snowflake_env_content }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - SNOWFLAKE CREDENTIALS"
+    create: yes
     mode: '0600'
-    decrypt: yes
+  no_log: true
 
 - name: Copy encrypted rsa_key.p8
   ansible.builtin.copy:
@@ -96,7 +103,7 @@
   debug:
     msg: |
       Snowflake setup completed successfully for user: {{ current_user.stdout }}
-      - .env file copied to {{ user_home.stdout }}/.env
+      - Snowflake credentials added to {{ user_home.stdout }}/.env (preserves existing variables)
       - RSA key copied to {{ user_home.stdout }}/.dbt/rsa_key.p8
       - profiles.yml copied to {{ user_home.stdout }}/.dbt/profiles.yml
       - Environment variables will be loaded on next shell session
