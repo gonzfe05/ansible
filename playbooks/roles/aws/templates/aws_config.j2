@@ -1,0 +1,18 @@
+[default]
+sso_session = {{ aws_config.default_profile.sso_session }}
+sso_account_id = {{ aws_config.default_profile.sso_account_id }}
+sso_role_name = {{ aws_config.default_profile.sso_role_name }}
+
+{% for profile in aws_config.profiles %}
+[profile {{ profile.name }}]
+sso_session = {{ profile.sso_session }}
+sso_account_id = {{ profile.sso_account_id }}
+sso_role_name = {{ profile.sso_role_name }}
+
+{% endfor %}
+{% for session in aws_config.sso_sessions %}
+[sso-session {{ session.name }}]
+sso_start_url = {{ session.sso_start_url }}
+sso_region = {{ session.sso_region }}
+sso_registration_scopes = {{ session.sso_registration_scopes }}
+{% endfor %}
