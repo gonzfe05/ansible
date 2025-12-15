@@ -1,0 +1,46 @@
+---
+- name: Verify runpodctl role
+  hosts: instance
+  tasks:
+    - name: Check if runpodctl binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/runpodctl
+      register: runpodctl_binary
+
+    - name: Ensure runpodctl binary exists and is executable
+      ansible.builtin.assert:
+        that:
+          - runpodctl_binary.stat.exists
+          - runpodctl_binary.stat.executable
+        fail_msg: "runpodctl binary not found or not executable at /usr/local/bin/runpodctl"
+        success_msg: "runpodctl binary found and is executable"
+
+    - name: Check runpodctl version
+      ansible.builtin.command: runpodctl version
+      register: runpodctl_version
+      changed_when: false
+
+    - name: Display runpodctl version
+      ansible.builtin.debug:
+        var: runpodctl_version.stdout_lines
+
+    - name: Ensure runpodctl version command succeeded
+      ansible.builtin.assert:
+        that:
+          - runpodctl_version.rc == 0
+          - runpodctl_version.stdout | length > 0
+        fail_msg: "runpodctl version check failed"
+        success_msg: "runpodctl is working correctly"
+
+    - name: Check runpodctl help works
+      ansible.builtin.command: runpodctl --help
+      register: runpodctl_help
+      changed_when: false
+
+    - name: Ensure runpodctl help succeeded
+      ansible.builtin.assert:
+        that:
+          - runpodctl_help.rc == 0
+          - "'runpod' in runpodctl_help.stdout.lower() or 'pod' in runpodctl_help.stdout.lower()"
+        fail_msg: "runpodctl help command failed"
+        success_msg: "runpodctl help works correctly"

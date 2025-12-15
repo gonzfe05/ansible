@@ -1,0 +1,51 @@
+---
+- name: Download runpodctl tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/runpod/runpodctl/releases/download/v{{ runpodctl_version }}/runpodctl-linux-{{ runpodctl_arch }}.tar.gz"
+    dest: "/tmp/runpodctl.tar.gz"
+    mode: '0644'
+
+- name: Extract runpodctl binary
+  ansible.builtin.unarchive:
+    src: /tmp/runpodctl.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Install runpodctl to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/runpodctl
+    dest: /usr/local/bin/runpodctl
+    remote_src: yes
+    mode: '0755'
+  become: true
+  become_user: root
+
+- name: Verify runpodctl installation
+  ansible.builtin.command: runpodctl version
+  register: runpodctl_version_check
+  changed_when: false
+
+- name: Check if runpodctl credentials file exists
+  ansible.builtin.stat:
+    path: "{{ role_path }}/files/runpodctl_credentials.yml"
+  register: runpodctl_creds_file
+  delegate_to: localhost
+  become: no
+
+- name: Read runpodctl credentials from encrypted file
+  ansible.builtin.include_vars:
+    file: files/runpodctl_credentials.yml
+    name: runpodctl_creds
+  when: runpodctl_creds_file.stat.exists
+  become: no
+
+- name: Set runpodctl API key from credentials file
+  ansible.builtin.set_fact:
+    runpodctl_api_key: "{{ runpodctl_creds.api_key }}"
+  when: runpodctl_creds_file.stat.exists and runpodctl_creds.api_key is defined
+  become: no
+
+- name: Configure runpodctl API key
+  ansible.builtin.command: runpodctl config --apiKey "{{ runpodctl_api_key }}"
+  when: runpodctl_api_key is defined
+  no_log: true
