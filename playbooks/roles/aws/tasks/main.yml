@@ -28,11 +28,6 @@
     msg: "AWS CLI version: {{ awscli_check.stdout }}"
   when: awscli_check.rc == 0
 
-- name: Read AWS credentials
-  include_vars:
-    file: files/aws_credentials.yml
-    name: aws_creds
-
 - name: Read AWS config
   include_vars:
     file: files/aws_config.yml
@@ -45,8 +40,8 @@
     mode: '0700'
 
 - name: Create AWS credentials file
-  template:
-    src: aws_credentials.j2
+  copy:
+    src: files/aws_credentials.yml
     dest: ~/.aws/credentials
     mode: '0600'
 
