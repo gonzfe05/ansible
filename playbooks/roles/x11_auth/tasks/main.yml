@@ -44,21 +44,21 @@
   become: true
   when: x11_auth_persistent
 
-- name: Create systemd user service for X11 authorization (alternative method)
-  ansible.builtin.template:
-    src: x11-auth.service.j2
-    dest: "/home/{{ primary_user }}/.config/systemd/user/x11-auth.service"
-    mode: '0644'
-    owner: "{{ primary_user }}"
-    group: "{{ primary_user }}"
-  become: true
-  when: x11_auth_persistent
-
 - name: Ensure systemd user directory exists
   ansible.builtin.file:
     path: "/home/{{ primary_user }}/.config/systemd/user"
     state: directory
     mode: '0755'
+    owner: "{{ primary_user }}"
+    group: "{{ primary_user }}"
+  become: true
+  when: x11_auth_persistent
+
+- name: Create systemd user service for X11 authorization (alternative method)
+  ansible.builtin.template:
+    src: x11-auth.service.j2
+    dest: "/home/{{ primary_user }}/.config/systemd/user/x11-auth.service"
+    mode: '0644'
     owner: "{{ primary_user }}"
     group: "{{ primary_user }}"
   become: true
