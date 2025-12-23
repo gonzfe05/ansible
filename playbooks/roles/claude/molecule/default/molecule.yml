@@ -16,6 +16,9 @@ provisioner:
     ansible-lint
   playbooks:
     converge: converge.yml
+  config_options:
+    defaults:
+      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../
 scenario:
   name: default
   test_sequence:
