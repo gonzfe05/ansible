@@ -1,0 +1,40 @@
+---
+- name: Verify claude role
+  hosts: instance
+  tasks:
+    - name: Check if Claude Code CLI is installed
+      ansible.builtin.shell: |
+        export NVM_DIR={{ ansible_env.HOME }}/.nvm
+        . "$NVM_DIR/nvm.sh"
+        which claude
+      register: claude_which
+      changed_when: false
+      failed_when: claude_which.rc != 0
+
+    - name: Ensure Claude Code CLI binary exists
+      ansible.builtin.assert:
+        that:
+          - claude_which.rc == 0
+          - "'claude' in claude_which.stdout"
+        fail_msg: "Claude Code CLI is not installed"
+        success_msg: "Claude Code CLI is installed"
+
+    - name: Check Claude Code CLI version
+      ansible.builtin.shell: |
+        export NVM_DIR={{ ansible_env.HOME }}/.nvm
+        . "$NVM_DIR/nvm.sh"
+        claude --version
+      register: claude_version
+      changed_when: false
+
+    - name: Display Claude Code CLI version
+      ansible.builtin.debug:
+        var: claude_version.stdout_lines
+
+    - name: Ensure Claude Code CLI version command succeeded
+      ansible.builtin.assert:
+        that:
+          - claude_version.rc == 0
+          - claude_version.stdout | length > 0
+        fail_msg: "Claude Code CLI version check failed"
+        success_msg: "Claude Code CLI is working correctly"

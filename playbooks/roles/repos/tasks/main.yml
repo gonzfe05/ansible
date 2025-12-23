@@ -80,3 +80,13 @@
     accept_hostkey: true
     force: true
     version: master
+
+- name: Cloning PoCs
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/PoCs.git'
+    dest: "{{ personal_folder }}/PoCs"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main

@@ -1,0 +1,20 @@
+---
+- name: Install Claude Code CLI via npm
+  ansible.builtin.shell: |
+    export NVM_DIR={{ ansible_env.HOME }}/.nvm
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @anthropic-ai/claude-code
+  args:
+    creates: "{{ ansible_env.HOME }}/.nvm/versions/node/*/bin/claude"
+
+- name: Verify Claude Code CLI installation
+  ansible.builtin.shell: |
+    export NVM_DIR={{ ansible_env.HOME }}/.nvm
+    . "$NVM_DIR/nvm.sh"
+    claude --version
+  register: claude_version_output
+  changed_when: false
+
+- name: Display Claude Code CLI version
+  ansible.builtin.debug:
+    msg: "Claude Code CLI installed: {{ claude_version_output.stdout }}"

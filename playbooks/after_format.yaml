@@ -103,4 +103,8 @@
       become: true
       become_user: aleph
       tags: ['runpodctl']
+    - role: claude
+      become: true
+      become_user: aleph
+      tags: ['claude']
 
