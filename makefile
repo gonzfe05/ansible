@@ -36,7 +36,7 @@ install_dev:
 	sudo scripts/install_ansible.sh
 	scripts/install_molecule.sh
 run_local:
-	$(if $(vault_pass_file),ANSIBLE_VAULT_PASSWORD_FILE=$(vault_pass_file),) ansible-playbook playbooks/after_format.yaml $(if $(vault_pass_file),,--ask-vault-pass) --ask-become-pass
+	$(if $(vault_pass_file),ANSIBLE_VAULT_PASSWORD_FILE=$(vault_pass_file),) ansible-playbook playbooks/after_format.yaml $(if $(vault_pass_file),,--ask-vault-pass) --ask-become-pass $(if $(tags),--tags $(tags),)
 test:
 	$(if $(vault_pass_file),ANSIBLE_VAULT_PASSWORD_FILE=$(vault_pass_file),) UBUNTU_MAJOR=$(ubuntu_major) UBUNTU_MINOR=$(ubuntu_minor) scripts/test_all_roles.sh
 clean-test-cache:

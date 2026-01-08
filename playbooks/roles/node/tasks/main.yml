@@ -7,10 +7,14 @@
 
 - name: Run nvm script
   shell: /tmp/nvm_install.sh
+  environment:
+    HOME: "/home/aleph"
 
 - name: Install node
   shell: |
-    export NVM_DIR={{ ansible_env.HOME }}/.nvm
+    export NVM_DIR=/home/aleph/.nvm
     . "$NVM_DIR/nvm.sh"
     nvm install --lts
+  environment:
+    HOME: "/home/aleph"
  
