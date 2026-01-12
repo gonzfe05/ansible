@@ -67,10 +67,3 @@
     path: "{{ item.path }}"
     mode: '0755'
   loop: "{{ bin_files.files }}"
-
-- name: Add DISPLAY env variable to ~/.zshrc
-  lineinfile:
-    path: "{{ ansible_env.HOME }}/.zshrc"
-    line: "export DISPLAY={{ ansible_env.DISPLAY }}"
-    create: yes
-  when: ansible_env.DISPLAY is defined

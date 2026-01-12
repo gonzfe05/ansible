@@ -44,6 +44,21 @@
   become: true
   when: x11_auth_persistent
 
+- name: Ensure primary user's bashrc sources profile.d scripts
+  ansible.builtin.blockinfile:
+    path: "/home/{{ primary_user }}/.bashrc"
+    block: |
+      # Load profile.d scripts (for X11 auth and other system configs)
+      if [ -d /etc/profile.d ]; then
+        for file in /etc/profile.d/*.sh; do
+          [ -r "$file" ] && . "$file"
+        done
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - PROFILE.D"
+    create: false
+  become: true
+  when: x11_auth_persistent
+
 - name: Ensure systemd user directory exists
   ansible.builtin.file:
     path: "/home/{{ primary_user }}/.config/systemd/user"

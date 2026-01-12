@@ -3,11 +3,11 @@
 # X11 Authorization for Secondary Users
 # This script grants X server access to secondary users for GUI apps and clipboard
 
-# Only run in graphical sessions with DISPLAY set
-if [ -n "$DISPLAY" ]; then
+# Only run in graphical sessions with DISPLAY and XAUTHORITY set
+if [ -n "$DISPLAY" ] && [ -n "$XAUTHORITY" ]; then
     # Grant access to secondary users (only if not already authorized)
 {% for user in x11_auth_users %}
-    if ! xhost | grep -q "localuser:{{ user }}"; then
+    if ! xhost 2>/dev/null | grep -q "localuser:{{ user }}"; then
         xhost +si:localuser:{{ user }} >/dev/null 2>&1
     fi
 {% endfor %}
