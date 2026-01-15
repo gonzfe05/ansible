@@ -90,3 +90,13 @@
     accept_hostkey: true
     force: true
     version: main
+
+- name: Cloning tasks
+  ansible.builtin.git:
+    repo: 'git@github.com:gonzfe05/tasks.git'
+    dest: "{{ personal_folder }}/tasks"
+    recursive: true
+    update: true
+    accept_hostkey: true
+    force: true
+    version: main
